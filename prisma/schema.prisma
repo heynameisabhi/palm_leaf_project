@@ -58,11 +58,11 @@ model Grantha {
 
 model UserAccount {
   user_id        String          @id @default(uuid())
-  user_name      String?
-  password       String?
-  role           String?
+  user_name      String          @unique
+  email          String          @unique
+  password       String
+  role           String
   phone_no       String?
-  email          String?
   address        String?
   accessControls AccessControl[]
 }
