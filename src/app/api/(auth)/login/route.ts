@@ -41,7 +41,6 @@ export async function POST(request: NextRequest) {
             data: user
         }, { status: 200 })
         
-        
     } catch (error) {
         if(error instanceof z.ZodError) {
             return NextResponse.json({ message: "Invalid request data passed: ", error }, {status: 422})
