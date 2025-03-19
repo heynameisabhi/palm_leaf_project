@@ -57,14 +57,16 @@ model Grantha {
 }
 
 model UserAccount {
-  user_id        String          @id @default(uuid())
-  user_name      String          @unique
-  email          String          @unique
-  password       String
-  role           String
-  phone_no       String?
-  address        String?
-  accessControls AccessControl[]
+  user_id                   String          @id @default(uuid())
+  user_name                 String          @unique
+  email                     String          @unique
+  password                  String
+  role                      String
+  phone_no                  String?
+  address                   String?
+  accessControls            AccessControl[]
+  forgotPasswordToken       String?
+  forgotPasswordTokenExpiry DateTime?
 }
 
 model AccessControl {
