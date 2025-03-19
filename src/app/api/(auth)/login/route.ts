@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { LoginUserAccountValidator } from "@/lib/validators/useraccount";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { UserStatus } from "@prisma/client";
 
 export async function POST(request: NextRequest) {
     try {
@@ -25,6 +26,19 @@ export async function POST(request: NextRequest) {
             }, { status: 400 })
         }
         
+        if(user.status === UserStatus.BLOCKED) {
+            return NextResponse.json({
+                success: false,
+                message: "User is blocked. Please contact admin."
+            }, { status: 403 })
+        }
+
+        if(user.status === UserStatus.SUSPENDED) {
+            return NextResponse.json({
+                success: false,
+                message: "User is suspended. Please contact admin."
+            }, { status: 403 })
+        }
 
         const isPasswordCorrect = await bcrypt.compare(password, user.password);
 

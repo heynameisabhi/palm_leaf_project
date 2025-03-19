@@ -56,6 +56,12 @@ model Grantha {
   scannedImages   ScannedImage[]
 }
 
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+  SUSPENDED
+}
+
 model UserAccount {
   user_id                   String          @id @default(uuid())
   user_name                 String          @unique
@@ -67,6 +73,7 @@ model UserAccount {
   accessControls            AccessControl[]
   forgotPasswordToken       String?
   forgotPasswordTokenExpiry DateTime?
+  status                    UserStatus      @default(ACTIVE) @map("status")
 }
 
 model AccessControl {
