@@ -1,11 +1,7 @@
-
-
 import { SignInForm } from '@/components/SignInForm'
 import { FC } from 'react'
 
-interface pageProps {
-  
-}
+interface pageProps {}
 
 const page: FC<pageProps> = ({}) => {
   return (

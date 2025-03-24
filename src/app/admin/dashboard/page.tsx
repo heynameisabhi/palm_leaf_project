@@ -1,11 +1,11 @@
-"use client"; 
+"use client";
 
 import { useAuth } from "@/components/useAuth";
 import { useSession } from "next-auth/react";
 
 export default function Dashboard() {
-  // only users with the role as users are allowed to access this page
-  useAuth(["user"]);
+  // only the users with the role as admin can view this page
+  useAuth(["admin"]);
 
   const { data: session, status } = useSession();
 
@@ -19,7 +19,9 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col items-center pt-20 bg-black w-full h-screen">
-      <h1 className="text-3xl font-bold text-green-500">Welcome user, {session.user?.email}!</h1>
+      <h1 className="text-3xl font-bold text-green-500">
+        Welcome Admin, {session.user?.email}!
+      </h1>
     </div>
   );
 }

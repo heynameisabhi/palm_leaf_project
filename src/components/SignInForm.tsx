@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Eye, EyeOff, Lock, Mail, User, Loader2 } from "lucide-react";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -24,6 +24,8 @@ export function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  const { data: session } = useSession();
 
   const [user, setUser] = useState({
     username: "",
@@ -48,8 +50,13 @@ export function SignInForm() {
       console.log(response.error);
       toast.error("Login failed: " + response.error);
     } else {
-      toast.success("Login successful!");
-      // router.push("/dashboard");
+      if (session?.user.role === "admin") {
+        toast.success("Login successful! welcom Admin.");
+        router.push("/admin/dashboard");
+      } else {
+        toast.success("Login successful!");
+        router.push("/dashboard");
+      }
     }
   };
 
