@@ -18,8 +18,8 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex flex-col items-center pt-20 bg-black w-full h-screen">
-      <h1 className="text-3xl font-bold text-green-500">
+    <div className="flex flex-col items-center pt-20 bg-black/50 w-full h-screen">
+      <h1 className="text-xl font-bold text-gray-400">
         Welcome Admin, {session.user?.email}!
       </h1>
     </div>
