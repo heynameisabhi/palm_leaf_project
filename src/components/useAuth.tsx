@@ -9,6 +9,8 @@ export const useAuth = (allowedRoles: string[]) => {
   useEffect(() => {
     if (status === "loading") return;
 
+    console.log(session?.user.role)
+
     if (!session || !allowedRoles.includes(session.user?.role)) {
       router.push("/unauthorized");
     }

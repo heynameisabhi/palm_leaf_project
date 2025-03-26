@@ -14,7 +14,7 @@ datasource db {
 }
 
 model GranthaDeck {
-  grantha_deck_id        String    @id @default(uuid())
+  grantha_deck_id        String      @id
   grantha_deck_name      String?
   grantha_owner_name     String?
   grantha_source_address String?
@@ -24,6 +24,8 @@ model GranthaDeck {
   total_images           Int?
   stitch_or_nonstitch    String?
   granthas               Grantha[]
+  user_id                String
+  user                   UserAccount @relation(fields: [user_id], references: [user_id])
 }
 
 model Language {
@@ -74,6 +76,7 @@ model UserAccount {
   forgotPasswordToken       String?
   forgotPasswordTokenExpiry DateTime?
   status                    UserStatus      @default(ACTIVE) @map("status")
+  GranthaDeck               GranthaDeck[]
 }
 
 model AccessControl {
@@ -85,7 +88,8 @@ model AccessControl {
 
 model ScannedImage {
   image_id           String              @id @default(uuid())
-  image_url          String?
+  image_name         String
+  image_url          String
   grantha_id         String
   grantha            Grantha             @relation(fields: [grantha_id], references: [grantha_id], onDelete: Cascade)
   scanningProperties ScanningProperties?
@@ -95,9 +99,9 @@ model ScanningProperties {
   scan_id                      String       @id @default(uuid())
   image_id                     String       @unique
   worked_by                    String?
-  file_format                  String?
-  scanner_model                String?
-  resolution_dpi               String?
+  file_format                  String
+  scanner_model                String
+  resolution_dpi               String
   lighting_conditions          String?
   color_depth                  String?
   scanning_start_date          String?

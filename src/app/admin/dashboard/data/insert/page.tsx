@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import {
   Loader2,
@@ -98,7 +98,6 @@ const FolderPathInput: React.FC = () => {
       // setMainFolderName(response.data.path.split('//').pop())
 
       // console.log(mainFolderName)
-      
     } catch (err) {
       console.error("Error:", err);
       setError(
@@ -109,15 +108,53 @@ const FolderPathInput: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    if (folderDetails) {
+      extractGranthaDetails(folderDetails);
+    }
+  }, [folderDetails]);
+
+  const extractGranthaDetails = (folderDetails: FolderDetails | null) => {
+    // const folderDetails = response.data;
+
+    if (folderDetails) {
+      const granthaDeckId = folderDetails.path.split("\\").pop() || ""; // Extract folder name
+      const totalImages = folderDetails.totalImages;
+      const totalLeaves = Math.ceil(totalImages / 2);
+
+      const mainFolderFiles = folderDetails.files;
+
+      // Organizing subfolders dynamically
+      const subGranthas = folderDetails.subfolders.map((sub: any) => ({
+        subgrantha_name: sub.path.split("\\").pop() || "", // Extract subfolder name
+        images: sub.files, // Store images inside this subfolder
+      }));
+
+      console.log("Grantha Deck ID:", granthaDeckId);
+      console.log("Total Images:", totalImages);
+      console.log("Total Leaves:", totalLeaves);
+      console.log("Main Folder Files:", mainFolderFiles);
+      console.log("SubGranthas:", subGranthas);
+
+      // return {
+      //   granthaDeckId,
+      //   totalImages,
+      //   totalLeaves,
+      //   mainFolderFiles,
+      //   subGranthas,
+      // };
+    }
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 p-4">
-      <Card className="w-full max-w-md border-slate-700 bg-slate-900/90 shadow-xl backdrop-blur-md">
-        <CardHeader className="border-b border-slate-800 bg-slate-900">
-          <CardTitle className="text-slate-100 flex items-center gap-2">
-            <FolderOpen className="h-5 w-5 text-indigo-400" />
+    <div className="flex items-center justify-center min-h-[calc(100vh-80px)] bg-gradient-to-tl from-zinc-950 via-black/30 to-emerald-950/80 p-3">
+      <Card className="w-full max-w-md border-[#1a1a1a] bg-black shadow-xl backdrop-blur-md">
+        <CardHeader className="border-b border-[#1a1a1a] bg-black">
+          <CardTitle className="text-white flex items-center gap-2">
+            <FolderOpen className="h-5 w-5 text-green-400" />
             Folder Explorer
           </CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardDescription className="text-gray-400">
             Enter a folder path to view its contents
           </CardDescription>
         </CardHeader>
@@ -126,14 +163,14 @@ const FolderPathInput: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <Search className="h-4 w-4 text-slate-400" />
+                <Search className="h-4 w-4 text-gray-500" />
               </div>
               <Input
                 type="text"
                 placeholder="Paste the absolute folder path here..."
                 value={folderPath}
                 onChange={(e) => setFolderPath(e.target.value)}
-                className="pl-10 bg-slate-950 border-slate-700 text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
+                className="pl-10 bg-[#121212] border-[#1a1a1a] text-white focus:ring-green-500 focus:border-green-500"
                 required
               />
             </div>
@@ -141,7 +178,7 @@ const FolderPathInput: React.FC = () => {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium"
+              className="w-full bg-gradient-to-r from-green-950 to-green-600 hover:bg-green-500 text-white font-medium"
             >
               {isLoading ? (
                 <>
@@ -167,39 +204,39 @@ const FolderPathInput: React.FC = () => {
         </CardContent>
 
         {folderDetails && (
-          <CardFooter className="flex flex-col border-t border-slate-800 pt-6 pb-6">
+          <CardFooter className="flex flex-col border-t border-[#1a1a1a] pt-6 pb-6">
             <div className="w-full space-y-6">
               <div className="flex flex-col space-y-2">
                 <div className="flex items-center">
-                  <div className="bg-indigo-500/10 p-2 rounded-md mr-3">
-                    <Folder className="h-6 w-6 text-indigo-400" />
+                  <div className="bg-green-500/10 p-2 rounded-md mr-3">
+                    <Folder className="h-6 w-6 text-green-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-medium text-slate-100">
+                    <h3 className="text-lg font-medium text-white">
                       {folderDetails.name}
                     </h3>
-                    <p className="text-xs text-slate-400 truncate max-w-[250px]">
+                    <p className="text-xs text-gray-400 truncate max-w-[250px]">
                       {folderDetails.path}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between bg-slate-800/30 p-3 rounded-md">
+                <div className="flex items-center justify-between bg-[#1a1a1a] p-3 rounded-md">
                   <div className="flex items-center">
-                    <HardDrive className="h-4 w-4 mr-2 text-indigo-400" />
-                    <span className="text-slate-300 text-sm font-medium">
+                    <HardDrive className="h-4 w-4 mr-2 text-green-400" />
+                    <span className="text-gray-300 text-sm font-medium">
                       Storage
                     </span>
                   </div>
                   <Badge
                     variant="secondary"
-                    className="bg-indigo-500/20 text-indigo-300 border-none"
+                    className="bg-green-500/20 text-green-300 border-none"
                   >
                     {folderDetails.size}
                   </Badge>
                 </div>
 
-                <div className="flex justify-between text-xs text-slate-400 px-1">
+                <div className="flex justify-between text-xs text-gray-400 px-1">
                   <span>Files: {folderDetails.files.length}</span>
                   <span>Folders: {folderDetails.subfolders.length}</span>
                   <span>Total: {folderDetails.totalImages}</span>
@@ -212,43 +249,41 @@ const FolderPathInput: React.FC = () => {
                         folderDetails.subfolders.length)) *
                     100
                   }
-                  className="h-1.5 bg-slate-700"
+                  className="h-1.5 bg-gray-700"
                 />
               </div>
 
               <Tabs defaultValue="files" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-slate-800/50">
+                <TabsList className="grid w-full grid-cols-2 bg-[#1a1a1a]">
                   <TabsTrigger
                     value="files"
-                    className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+                    className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
                   >
                     Files ({folderDetails.files.length})
                   </TabsTrigger>
                   <TabsTrigger
                     value="folders"
-                    className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+                    className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
                   >
                     Folders ({folderDetails.subfolders.length})
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="files" className="mt-4">
-                  <ScrollArea className="h-48 rounded-md border border-slate-700 bg-slate-800/20 p-2">
+                  <ScrollArea className="h-48 rounded-md border border-[#1a1a1a] bg-[#121212] p-2">
                     {folderDetails.files.map((file, index) => (
                       <TooltipProvider key={index}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <li className="text-sm text-slate-300 flex items-center gap-2 p-1.5 rounded hover:bg-slate-700/30 transition-colors">
-                              <div className="bg-slate-700/50 p-1 rounded">
-                                <File className="h-3.5 w-3.5 text-indigo-400" />
+                            <li className="text-sm text-gray-300 flex items-center gap-2 p-1.5 rounded hover:bg-gray-700/30 transition-colors">
+                              <div className="bg-gray-700/50 p-1 rounded">
+                                <File className="h-3.5 w-3.5 text-green-400" />
                               </div>
-                              <span className="truncate">{file.name}</span>{" "}
-                              {/* Use file.name instead of file */}
+                              <span className="truncate">{file.name}</span>
                             </li>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{file.name}</p>{" "}
-                            {/* Use file.name instead of file */}
+                            <p>{file.name}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -257,21 +292,22 @@ const FolderPathInput: React.FC = () => {
                 </TabsContent>
 
                 <TabsContent value="folders" className="mt-4">
-                  <ScrollArea className="h-48 rounded-md border border-slate-700 bg-slate-800/20 p-2">
+                  <ScrollArea className="h-48 rounded-md border border-[#1a1a1a] bg-[#121212] p-2">
                     {folderDetails.subfolders.map((folder, index) => (
                       <TooltipProvider key={index}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <li className="text-sm text-slate-300 flex items-center gap-2 p-1.5 rounded hover:bg-slate-700/30 transition-colors">
-                              <div className="bg-slate-700/50 p-1 rounded">
-                                <Folder className="h-3.5 w-3.5 text-indigo-400" />
+                            <li className="text-sm text-gray-300 flex items-center gap-2 p-1.5 rounded hover:bg-gray-700/30 transition-colors">
+                              <div className="bg-gray-700/50 p-1 rounded">
+                                <Folder className="h-3.5 w-3.5 text-green-400" />
                               </div>
-                              <span className="truncate">{folder.path.split("\\").pop()}</span>{" "}
-                              {/* Use folder.name */}
+                              <span className="truncate">
+                                {folder.path.split("\\").pop()}
+                              </span>
                             </li>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{folder.path.split("\\").pop()}</p> {/* Use folder.name */}
+                            <p>{folder.path.split("\\").pop()}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
