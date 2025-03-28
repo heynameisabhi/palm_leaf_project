@@ -58,6 +58,7 @@ export default function ManageUsersPage() {
     fetchAllUsers();
   }, []);
 
+  // instead of useMutation() use useQuery()
   const toggleUserStatus = useMutation({
     mutationFn: async (user: UserAccount) => {
       const updatedStatus = user.status === "ACTIVE" ? "BLOCKED" : "ACTIVE";
