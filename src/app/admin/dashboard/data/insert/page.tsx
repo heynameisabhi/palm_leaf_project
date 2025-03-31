@@ -111,6 +111,8 @@ const FolderPathInput: React.FC = () => {
   useEffect(() => {
     if (folderDetails) {
       extractGranthaDetails(folderDetails);
+      // after extracting the details from the extracted folder create an api route for storing this data 
+      // in the csv files in the backend
     }
   }, [folderDetails]);
 
