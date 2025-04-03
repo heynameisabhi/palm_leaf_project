@@ -62,7 +62,7 @@ interface Subfolder {
   size: number;
 }
 
-const FolderPathInput: React.FC = () => {
+const page: React.FC = () => {
   const [folderPath, setFolderPath] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -70,7 +70,8 @@ const FolderPathInput: React.FC = () => {
     null
   );
 
-  // const [mainFolderName, setMainFolderName] = useState<string>("")
+  const [showCreateCsvButton, setShowCreateCsvButton] =
+    useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,10 +95,6 @@ const FolderPathInput: React.FC = () => {
       console.log(response.data);
 
       setFolderDetails(response.data);
-
-      // setMainFolderName(response.data.path.split('//').pop())
-
-      // console.log(mainFolderName)
     } catch (err) {
       console.error("Error:", err);
       setError(
@@ -110,46 +107,51 @@ const FolderPathInput: React.FC = () => {
 
   useEffect(() => {
     if (folderDetails) {
-      extractGranthaDetails(folderDetails);
-      // after extracting the details from the extracted folder create an api route for storing this data 
-      // in the csv files in the backend
+      setShowCreateCsvButton(true);
     }
   }, [folderDetails]);
 
   const extractGranthaDetails = (folderDetails: FolderDetails | null) => {
-    // const folderDetails = response.data;
-
     if (folderDetails) {
-      const granthaDeckId = folderDetails.path.split("\\").pop() || ""; // Extract folder name
+      const granthaDeckId = folderDetails.path.split("\\").pop() || "";
       const totalImages = folderDetails.totalImages;
       const totalLeaves = Math.ceil(totalImages / 2);
 
-      const mainFolderFiles = folderDetails.files;
-
-      // Organizing subfolders dynamically
+      const mainGranthaImagesAndDetails = folderDetails.files;
       const subGranthas = folderDetails.subfolders.map((sub: any) => ({
-        subgrantha_name: sub.path.split("\\").pop() || "", // Extract subfolder name
-        images: sub.files, // Store images inside this subfolder
+        subgrantha_name: sub.path.split("\\").pop() || "",
+        images: sub.files,
       }));
 
       console.log("Grantha Deck ID:", granthaDeckId);
       console.log("Total Images:", totalImages);
       console.log("Total Leaves:", totalLeaves);
-      console.log("Main Folder Files:", mainFolderFiles);
+      console.log("Main Grantha Image and their details:", mainGranthaImagesAndDetails);
       console.log("SubGranthas:", subGranthas);
 
-      // return {
-      //   granthaDeckId,
-      //   totalImages,
-      //   totalLeaves,
-      //   mainFolderFiles,
-      //   subGranthas,
-      // };
+      saveDetailsToCSV({
+        granthaDeckId,
+        totalImages,
+        totalLeaves,
+        mainGranthaImagesAndDetails,
+        subGranthas,
+      });
+    }
+  };
+
+  const saveDetailsToCSV = async (data: any) => {
+    try {
+      const response = await axios.post("/api/save-to-csv", data);
+      console.log("CSV Files Created:", response.data.files);
+      // setCsvFiles(response.data.files);
+    } catch (error) {
+      console.error("Error saving CSV files:", error);
+      setError("Error creating CSV files. Please try again.");
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-80px)] bg-gradient-to-tl from-zinc-950 via-black/30 to-emerald-950/80 p-3">
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] bg-gradient-to-tl from-zinc-950 via-black/30 to-emerald-950/80 p-3">
       <Card className="w-full max-w-md border-[#1a1a1a] bg-black shadow-xl backdrop-blur-md">
         <CardHeader className="border-b border-[#1a1a1a] bg-black">
           <CardTitle className="text-white flex items-center gap-2">
@@ -321,8 +323,17 @@ const FolderPathInput: React.FC = () => {
           </CardFooter>
         )}
       </Card>
+
+      {showCreateCsvButton && (
+        <Button
+          onClick={() => extractGranthaDetails(folderDetails)}
+          className="mt-10 cursor-pointer bg-gradient-to-r from-green-950 to-green-600 text-white font-semibold py-4 px-6 rounded-lg transition-all"
+        >
+          Create CSV
+        </Button>
+      )}
     </div>
   );
 };
 
-export default FolderPathInput;
+export default page;
