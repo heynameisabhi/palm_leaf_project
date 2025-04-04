@@ -35,6 +35,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/Tooltip";
 import { toast } from "sonner";
+import CsvDownloadLinks from "@/components/CsvDownloadLinks";
 
 interface FolderDetails {
   name: string;
@@ -73,6 +74,9 @@ const page: React.FC = () => {
 
   const [showCreateCsvButton, setShowCreateCsvButton] =
     useState<boolean>(false);
+
+
+  const [showCsvDownloadLinks, setShowCdvDownloadLinks] = useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,6 +151,7 @@ const page: React.FC = () => {
 
       toast.success("CSV files created successfully.");
       // setCsvFiles(response.data.files);
+      setShowCdvDownloadLinks(true);
     } catch (error) {
       console.error("Error saving CSV files:", error);
       setError("Error creating CSV files. Please try again.");
@@ -335,6 +340,8 @@ const page: React.FC = () => {
           Create CSV
         </Button>
       )}
+
+      {showCsvDownloadLinks && <CsvDownloadLinks />}
     </div>
   );
 };

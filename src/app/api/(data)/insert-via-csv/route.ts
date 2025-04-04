@@ -16,14 +16,28 @@ export async function POST(request: NextRequest) {
         //     return NextResponse.json("Unauthorized", { status: 401 });
         // }
 
-        const basePath = path.join(process.cwd(), "public/csv");
-        const granthaDeckCsv = fs.readFileSync(path.join(basePath, "GranthaDeck.csv"), "utf8");
-        const granthaCsv = fs.readFileSync(path.join(basePath, "Grantha.csv"), "utf8");
-        const scannedImagesCsv = fs.readFileSync(path.join(basePath, "ScannedImageAndProperties.csv"), "utf8");
+        // Retrieve files from the form data
 
-        const granthaDeckData = parse(granthaDeckCsv, { columns: true, skip_empty_lines: true });
-        const granthaData = parse(granthaCsv, { columns: true, skip_empty_lines: true });
-        const scannedImagesData = parse(scannedImagesCsv, { columns: true, skip_empty_lines: true });
+        const formData = await request.formData();
+        const files = formData.getAll("files") as File[];
+
+        // Validate the number of files
+        if (files.length !== 3) {
+        return NextResponse.json("Exactly 3 CSV files are required.", { status: 400 });
+        }
+
+        // Sort the files by their filenames (this is done to maintain proper order of the csv files so that they can be properly extracted)
+        files.sort((a, b) => a.name.localeCompare(b.name));
+        
+        console.log(files)
+
+        
+        // Read and parse each CSV file
+        const csvContents = await Promise.all(files.map(file => file.text()));
+        // console.log(csvContents)
+        const granthaData = parse(csvContents[0], { columns: true, skip_empty_lines: true });
+        const granthaDeckData = parse(csvContents[1], { columns: true, skip_empty_lines: true });
+        const scannedImagesData = parse(csvContents[2], { columns: true, skip_empty_lines: true });
 
         // console.log(scannedImagesData)
 
@@ -139,6 +153,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json("Data inserted successfully.", { status: 200 });
         
     } catch (error: any) {
+        console.log(error.message)
         return NextResponse.json(error.message, { status: 500 });
     }
 }
