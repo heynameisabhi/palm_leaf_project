@@ -87,7 +87,7 @@ model AccessControl {
 }
 
 model ScannedImage {
-  image_id           String              @id // default ids are not required here
+  image_id           String              @id @default(uuid())
   image_name         String
   image_url          String
   grantha_id         String
