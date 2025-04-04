@@ -56,14 +56,14 @@ export async function POST(request: NextRequest) {
         // 3. ScannedImageAndProperties.csv
         const imageData = [
             ...mainGranthaImagesAndDetails.map((img: any) => ({
-                image_id: img.name,
-                image_name: img.name,
+                image_id: img.name.replace(/\.[^/.]+$/, ""),
+                image_name: img.name.replace(/\.[^/.]+$/, ""),
                 image_url: img.path,
                 grantha_id: `${granthaDeckId}_main_grantha`,
                 worked_by: "", 
-                file_format: img.extension,
+                file_format: img.extension.replace(".", "").toUpperCase(),
                 scanner_model: "", 
-                resolution_dpi: img.dpi.join("x"),
+                resolution_dpi: img.dpi.map(Math.round).join("x"),
                 lighting_conditions: "", 
                 color_depth: "", 
                 scanning_start_date: "", 
@@ -73,14 +73,14 @@ export async function POST(request: NextRequest) {
             })),
             ...subGranthas.flatMap((sub: any) =>
                 sub.images.map((img: any) => ({
-                    image_id: img.name,
-                    image_name: img.name,
+                    image_id: img.name.replace(/\.[^/.]+$/, ""),
+                    image_name: img.name.replace(/\.[^/.]+$/, ""),
                     image_url: img.path,
                     grantha_id: sub.subgrantha_name,
                     worked_by: "", 
-                    file_format: img.extension,
+                    file_format: img.extension.replace(".", "").toUpperCase(),
                     scanner_model: "", 
-                    resolution_dpi: img.dpi.join("x"),
+                    resolution_dpi: img.dpi.map(Math.round).join("x"),
                     lighting_conditions: "", 
                     color_depth: "", 
                     scanning_start_date: "", 

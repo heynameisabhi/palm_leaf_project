@@ -1,0 +1,140 @@
+import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
+import { parse } from "csv-parse/sync";
+import { db } from "@/lib/db";
+import { authOptions, getAuthSession } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+
+export async function POST(request: NextRequest) {
+    try {
+        const session = await getServerSession(authOptions);
+
+        console.log("Session Data:", session);
+
+        // if(!session) {
+        //     return NextResponse.json("Unauthorized", { status: 401 });
+        // }
+
+        const basePath = path.join(process.cwd(), "public/csv");
+        const granthaDeckCsv = fs.readFileSync(path.join(basePath, "GranthaDeck.csv"), "utf8");
+        const granthaCsv = fs.readFileSync(path.join(basePath, "Grantha.csv"), "utf8");
+        const scannedImagesCsv = fs.readFileSync(path.join(basePath, "ScannedImageAndProperties.csv"), "utf8");
+
+        const granthaDeckData = parse(granthaDeckCsv, { columns: true, skip_empty_lines: true });
+        const granthaData = parse(granthaCsv, { columns: true, skip_empty_lines: true });
+        const scannedImagesData = parse(scannedImagesCsv, { columns: true, skip_empty_lines: true });
+
+        // console.log(scannedImagesData)
+
+        await db.$transaction(async (tx) => {
+            // 1. fill Grantha deck data
+
+            const granthaDeck = await tx.granthaDeck.create({
+                data: {
+                    grantha_deck_id: granthaDeckData[0].grantha_deck_id,
+                    grantha_deck_name: granthaDeckData[0].grantha_deck_name,
+                    grantha_owner_name: granthaDeckData[0].grantha_owner_name,
+                    grantha_source_address: granthaDeckData[0].grantha_source_address,
+                    length_in_cms: parseFloat(granthaDeckData[0].length_in_cms),
+                    width_in_cms: parseFloat(granthaDeckData[0].width_in_cms),
+                    total_leaves: parseInt(granthaDeckData[0].total_leaves),
+                    total_images: parseInt(granthaDeckData[0].total_images),
+                    stitch_or_nonstitch: granthaDeckData[0].stitch_or_nonstitch,
+                    user_id: '182be5fa-fa12-4db8-8015-9a356716c541',
+                },
+            });
+
+            // 2. fill Grantha data
+
+            console.log("Starting to fill grantha data");
+
+            for (const grantha of granthaData) {
+                // check if author is present
+                let author = await tx.author.findFirst({
+                    where: {
+                        author_name: {
+                            equals: grantha.author.trim().toLowerCase(),
+                            mode: "insensitive",
+                        },
+                    },
+                });
+
+                if (!author) {
+                    return NextResponse.json(`Author ${grantha.author} not found!`,{ status: 404 })
+                }
+
+                // Check if the language is already present
+                let language = await tx.language.findFirst({
+                    where: {
+                        language_name: {
+                            equals: grantha.language.trim().toLowerCase(),
+                            mode: "insensitive",
+                        },
+                    },
+                });
+
+                if (!language) {
+                    language = await tx.language.create({
+                        data: { language_name: grantha.language.trim() },
+                    });
+                }
+
+                await tx.grantha.create({
+                    data: {
+                        grantha_id: grantha.grantha_id,
+                        grantha_deck_id: granthaDeck.grantha_deck_id,
+                        grantha_name: grantha.grantha_name,
+                        language_id: language.language_id,
+                        author_id: author.author_id,
+                        remarks: grantha.remarks,
+                        description: grantha.description,
+                    },
+                });
+
+                console.log("Completed filling grantha data inside loop");
+            }
+
+            console.log("Completed filling grantha data")
+
+            console.log("Starting to fill image data")
+            for (const image of scannedImagesData) {
+                // 3. Fill Scanned Image Data
+                console.log(image)
+                const scannedImage = await tx.scannedImage.create({
+                    data: {
+                        image_id: image.image_id,
+                        image_name: image.image_name,
+                        image_url: image.image_url,
+                        grantha_id: image.grantha_id,
+                    },
+                });
+
+                // 4. Fill Scanning Properties Data
+
+                await tx.scanningProperties.create({
+                    data: {
+                        image_id: scannedImage.image_id,
+                        worked_by: image.worked_by,
+                        file_format: image.file_format,
+                        scanner_model: image.scanner_model,
+                        resolution_dpi: image.resolution_dpi,
+                        lighting_conditions: image.lighting_conditions,
+                        color_depth: image.color_depth,
+                        scanning_start_date: image.scanning_start_date,
+                        scanning_completed_date: image.scanning_completed_date,
+                        post_scanning_completed_date: image.post_scanning_completed_date,
+                        horizontal_or_vertical_scan: image.horizontal_or_vertical_scan,
+                    },
+                });
+            }
+
+            console.log("completed filling image data!")
+        })
+
+        return NextResponse.json("Data inserted successfully.", { status: 200 });
+        
+    } catch (error: any) {
+        return NextResponse.json(error.message, { status: 500 });
+    }
+}

@@ -1,7 +1,8 @@
-"grantha_id","grantha_name","language","author","remarks","description"
-"TP_DEBU-0001_main_grantha","","","","",""
-"TP_DBU-0001-W1","","","","",""
-"TP_DBU-0001-W2","","","","",""
-"TP_DBU-0001-W3","","","","",""
-"TP_DBU-0001-W4","","","","",""
-"TP_DBU-0001-W5","","","","",""
+grantha_id,grantha_name,language,author,remarks,description
+TP_DEBU-0001_main_grantha,Mahabharata,Sanskrit,Vyasa,Ancient epic,One of the two major Sanskrit epics of ancient India.
+TP_DBU-0001-W1,Bhagavad Gita,Sanskrit,Vyasa,Part of Mahabharata,"A sacred Hindu scripture, a conversation between Krishna and Arjuna."
+TP_DBU-0001-W2,"Harivamsa	",Sanskrit,Vyasa,"	Supplement to Mahabharata",Genealogy and stories of Lord Krishna.
+TP_DBU-0001-W3,Bharata Samhita,Kannada,Vyasa,Kannada translation,A regional adaptation of the Mahabharata.
+TP_DBU-0001-W4,Jaya Samhita,Tamil,Vyasa,Another name for Mahabharata,Another version of the epic.
+TP_DBU-0001-W5,Krishna Charitra,Telugu,Vyasa,Focuses on Krishna,Narrates the life and deeds of Krishna.
+,,,,,

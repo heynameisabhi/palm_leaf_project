@@ -34,6 +34,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/Tooltip";
+import { toast } from "sonner";
 
 interface FolderDetails {
   name: string;
@@ -143,6 +144,8 @@ const page: React.FC = () => {
     try {
       const response = await axios.post("/api/save-to-csv", data);
       console.log("CSV Files Created:", response.data.files);
+
+      toast.success("CSV files created successfully.");
       // setCsvFiles(response.data.files);
     } catch (error) {
       console.error("Error saving CSV files:", error);
