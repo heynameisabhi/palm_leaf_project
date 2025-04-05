@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/Tooltip";
 import { toast } from "sonner";
 import CsvDownloadLinks from "@/components/CsvDownloadLinks";
+import Link from "next/link";
 
 interface FolderDetails {
   name: string;
@@ -75,8 +76,8 @@ const page: React.FC = () => {
   const [showCreateCsvButton, setShowCreateCsvButton] =
     useState<boolean>(false);
 
-
-  const [showCsvDownloadLinks, setShowCdvDownloadLinks] = useState<boolean>(false);
+  const [showCsvDownloadLinks, setShowCdvDownloadLinks] =
+    useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,7 +132,10 @@ const page: React.FC = () => {
       console.log("Grantha Deck ID:", granthaDeckId);
       console.log("Total Images:", totalImages);
       console.log("Total Leaves:", totalLeaves);
-      console.log("Main Grantha Image and their details:", mainGranthaImagesAndDetails);
+      console.log(
+        "Main Grantha Image and their details:",
+        mainGranthaImagesAndDetails
+      );
       console.log("SubGranthas:", subGranthas);
 
       saveDetailsToCSV({
@@ -341,7 +345,17 @@ const page: React.FC = () => {
         </Button>
       )}
 
-      {showCsvDownloadLinks && <CsvDownloadLinks />}
+      {showCsvDownloadLinks && (
+        <>
+          <CsvDownloadLinks />
+          <Link
+            href="/admin/dashboard/data/insert/upload-csv"
+            className="mt-10 cursor-pointer bg-gradient-to-r from-green-950 to-green-600 text-white font-semibold py-1 px-6 rounded-lg transition-all"
+          >
+            Upload CSV
+          </Link>
+        </>
+      )}
     </div>
   );
 };

@@ -167,7 +167,7 @@ export default function CsvUploader() {
             <Button
               onClick={handleUpload}
               disabled={!selectedFiles || selectedFiles.length === 0 || isUploading}
-              className="bg-green-600 hover:bg-green-700 text-white font-medium px-6"
+              className="bg-green-600 cursor-pointer hover:bg-green-700 text-white font-medium px-6"
             >
               {isUploading ? (
                 <>
