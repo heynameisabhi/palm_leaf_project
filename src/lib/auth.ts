@@ -7,6 +7,7 @@ import { UserStatus } from "@prisma/client";
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   // pages: {
   //   signIn: "/login", // Redirect to login page if not authenticated
@@ -21,22 +22,26 @@ export const authOptions: NextAuthOptions = {
       },
       
       async authorize(credentials) {
-        if (!credentials?.username || !credentials?.password || !credentials?.email) {
-          throw new Error("Email,Username and password are required.");
+        if (!credentials?.username && !credentials?.email) {
+          throw new Error("Email or username is required.");
+        }
+        
+        if (!credentials?.password) {
+          throw new Error("Password is required.");
         }
 
-        console.log(credentials)
+        console.log("Credentials:", credentials);
 
         const user = await db.userAccount.findFirst({
           where: {
             OR: [
-              { email: credentials.email },
-              { user_name: credentials.username },
+              { email: credentials.email || "" },
+              { user_name: credentials.username || "" },
             ],
           },
         });
 
-        console.log(user)
+        console.log("User found:", user);
 
         if (!user) {
           throw new Error("User does not exist. Please register first.");
@@ -65,22 +70,42 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      // Initial sign in
       if (user) {
         token.id = user.id;
+        token.name = user.name;
+        token.email = user.email;
         token.role = user.role;
       }
+
+      // Update token if session is updated
+      if (trigger === "update" && session) {
+        token = { ...token, ...session };
+      }
+
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
+      if (token && session.user) {
         session.user.id = token.id as string;
+        session.user.name = token.name as string;
+        session.user.email = token.email as string;
         session.user.role = token.role as string;
       }
       return session;
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
 };
 
-export const getAuthSession = async () => await getServerSession(authOptions);
+export const getAuthSession = async () => {
+  try {
+    const session = await getServerSession(authOptions);
+    return session;
+  } catch (error) {
+    console.error("Error getting auth session:", error);
+    return null;
+  }
+};

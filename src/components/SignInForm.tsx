@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Eye, EyeOff, Lock, Mail, User, Loader2 } from "lucide-react";
-import { signIn, useSession } from "next-auth/react";
+import { getSession, signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -36,22 +36,25 @@ export function SignInForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
+  
     const response = await signIn("credentials", {
       username: user.username,
       email: user.email,
       password: user.password,
       redirect: false,
     });
-
-    setIsLoading(false);
-
+  
     if (response?.error) {
+      setIsLoading(false);
       console.log(response.error);
       toast.error("Login failed: " + response.error);
     } else {
-      if (session?.user.role === "admin") {
-        toast.success("Login successful! welcom Admin.");
+      // Get the updated session after signing in
+      const currentSession = await getSession();
+      setIsLoading(false);
+      
+      if (currentSession?.user?.role === "admin") {
+        toast.success("Login successful! Welcome Admin.");
         router.push("/admin/dashboard");
       } else {
         toast.success("Login successful!");

@@ -8,13 +8,13 @@ import { getServerSession } from "next-auth";
 
 export async function POST(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await getAuthSession();
 
         console.log("Session Data:", session);
 
-        // if(!session) {
-        //     return NextResponse.json("Unauthorized", { status: 401 });
-        // }
+        if(!session) {
+            return NextResponse.json("Unauthorized", { status: 401 });
+        }
 
         // Retrieve files from the form data
 
@@ -23,13 +23,13 @@ export async function POST(request: NextRequest) {
 
         // Validate the number of files
         if (files.length !== 3) {
-        return NextResponse.json("Exactly 3 CSV files are required.", { status: 400 });
+            return NextResponse.json("Exactly 3 CSV files are required.", { status: 400 });
         }
 
         // Sort the files by their filenames (this is done to maintain proper order of the csv files so that they can be properly extracted)
         files.sort((a, b) => a.name.localeCompare(b.name));
         
-        console.log(files)
+        // console.log(files)
 
         
         // Read and parse each CSV file
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
                     total_leaves: parseInt(granthaDeckData[0].total_leaves),
                     total_images: parseInt(granthaDeckData[0].total_images),
                     stitch_or_nonstitch: granthaDeckData[0].stitch_or_nonstitch,
-                    user_id: '182be5fa-fa12-4db8-8015-9a356716c541',
+                    user_id: session?.user.id,
                 },
             });
 
