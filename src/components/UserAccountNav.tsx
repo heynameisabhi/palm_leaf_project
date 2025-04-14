@@ -7,7 +7,7 @@ import { signOut } from "next-auth/react"
 import { LogOut, Settings, UserIcon, LayoutDashboard } from "lucide-react"
 
 interface UserAccountNavProps {
-  user: Pick<User, "name" | "image" | "email">
+  user: Pick<User, "name" | "image" | "email" | "role">
 }
 
 const UserAccountNav: FC<UserAccountNavProps> = ({ user }) => {
@@ -76,7 +76,7 @@ const UserAccountNav: FC<UserAccountNavProps> = ({ user }) => {
             </li>
             <li>
               <Link
-                href="/dashboard"
+                href={user.role === "admin" ? "/admin/dashboard" : "/dashboard"}
                 className="flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
                 onClick={() => setIsOpen(false)}
               >

@@ -23,6 +23,7 @@ model GranthaDeck {
   total_leaves           Int?
   total_images           Int?
   stitch_or_nonstitch    String?
+  physical_condition     String?
   granthas               Grantha[]
   user_id                String
   user                   UserAccount @relation(fields: [user_id], references: [user_id])

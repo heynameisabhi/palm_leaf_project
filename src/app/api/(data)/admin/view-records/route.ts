@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = request.nextUrl;
 
     const userId = searchParams.get("userId");
+    const username = searchParams.get("username");
     const limitParam = searchParams.get("limit");
 
     const limit = limitParam ? parseInt(limitParam) : 10;
@@ -22,21 +23,44 @@ export async function GET(request: NextRequest) {
         createdAt: "desc",
       },
       include: {
+        user: {
+          select: {
+            user_name: true,
+            email: true,
+          },
+        },
         _count: {
           select: { granthas: true },
         },
       },
     };
 
+    // Build where clause
+    const whereClause: any = {};
+
     if (userId) {
-      // if the userId is passed in the request filter the records based on the userId
-      queryOptions.where = {
-        user_id: userId,
+      whereClause.user_id = userId;
+    }
+
+    if (username) {
+      whereClause.user = {
+        user_name: {
+          contains: username,
+          mode: 'insensitive',
+        },
       };
     }
 
+    // If user is not admin, only show their records unless they explicitly search
+    if (session.user.role !== "ADMIN" && !userId && !username) {
+      whereClause.user_id = session.user.id;
+    }
+
+    if (Object.keys(whereClause).length > 0) {
+      queryOptions.where = whereClause;
+    }
+
     if (limit) {
-      // if the limit is passed in the request limit the records to the specified limit
       queryOptions.take = limit;
     }
 

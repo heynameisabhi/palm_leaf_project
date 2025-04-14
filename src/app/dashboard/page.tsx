@@ -113,8 +113,8 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black to-zinc-900 text-zinc-100">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-b from-black to-zinc-900 text-zinc-100 p-6">
+      <div className="w-full">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>

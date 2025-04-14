@@ -74,7 +74,7 @@ export default function HeroSection() {
   }, [])
 
   return (
-    <section ref={sectionRef} className="relative pt-32 pb-20 overflow-hidden">
+    <section ref={sectionRef} className="h-screen relative pt-32 pb-20 overflow-hidden">
       {/* Gradient orbs */}
       <div className="absolute top-1/4 -left-20 w-[300px] h-[300px] rounded-full bg-gradient-to-r from-emerald-900/20 to-green-800/20 blur-3xl gradient-orb"></div>
       <div className="absolute bottom-1/4 -right-20 w-[250px] h-[250px] rounded-full bg-gradient-to-r from-green-900/20 to-emerald-800/20 blur-3xl gradient-orb"></div>

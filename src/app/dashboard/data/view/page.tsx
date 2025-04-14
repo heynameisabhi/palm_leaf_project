@@ -19,8 +19,8 @@ import { AlertCircle, Filter, RefreshCw, Search, User, Database } from "lucide-r
 import { Badge } from "@/components/ui/Badge";
 import { formatTimeAgo } from "@/helpers/formatTime";
 import { GranthaDeck, Prisma } from "@prisma/client";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 
 type GranthaDeckWithCount = Prisma.GranthaDeckGetPayload<{
   include: { 
@@ -30,15 +30,17 @@ type GranthaDeckWithCount = Prisma.GranthaDeckGetPayload<{
 }>;
 
 export default function GranthaDeckViewer() {
+  const { data: session } = useSession();
   const [userId, setUserId] = useState("");
   const [username, setUsername] = useState("");
   const [limit, setLimit] = useState("10");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [showAllRecords, setShowAllRecords] = useState(false);
   const router = useRouter();
 
   const fetchGranthaDecks = async () => {
     const queryParams = new URLSearchParams({
-      userId: userId || "",
+      userId: showAllRecords ? (userId || "") : (session?.user?.id || ""),
       username: username || "",
       limit: limit ? limit.toString() : "10",
     }).toString();
@@ -48,8 +50,9 @@ export default function GranthaDeckViewer() {
   };
 
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["grantha-decks", userId, username, limit],
+    queryKey: ["grantha-decks", userId, username, limit, showAllRecords],
     queryFn: fetchGranthaDecks,
+    enabled: !!session,
   });
 
   return (
@@ -58,10 +61,10 @@ export default function GranthaDeckViewer() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-200">
-              Grantha Deck Records
+              My Grantha Deck Records
             </h1>
             <p className="text-muted-foreground mt-1">
-              View and manage all Grantha Deck records
+              View and manage your Grantha Deck records
             </p>
           </div>
 
@@ -69,7 +72,7 @@ export default function GranthaDeckViewer() {
             <Button
               variant="outline"
               onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className="flex items-center gap-2 bg-zinc-900 border-zinc-700 hover:bg-white hover:text-black text-zinc-300"
+              className="flex items-center gap-2 bg-zinc-900 border-zinc-700 hover:bg-zinc-800 text-zinc-300"
             >
               <Filter className="h-4 w-4" />
               {isFilterOpen ? "Hide Filters" : "Show Filters"}
@@ -77,7 +80,7 @@ export default function GranthaDeckViewer() {
             <Button
               onClick={() => refetch()}
               variant="secondary"
-              className="flex items-center gap-2 bg-zinc-800 hover:bg-white hover:text-black text-zinc-300"
+              className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
             >
               <RefreshCw className="h-4 w-4" />
               Refresh
@@ -94,60 +97,80 @@ export default function GranthaDeckViewer() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <label
-                    htmlFor="userId"
-                    className="text-sm font-medium text-zinc-300"
-                  >
-                    User ID
-                  </label>
-                  <div className="relative">
-                    <Database className="absolute left-2 top-2.5 h-4 w-4 text-zinc-500" />
-                    <Input
-                      id="userId"
-                      placeholder="Filter by user ID"
-                      value={userId}
-                      onChange={(e) => setUserId(e.target.value)}
-                      className="pl-8 bg-zinc-900 border-zinc-700 text-zinc-300"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label
-                    htmlFor="username"
-                    className="text-sm font-medium text-zinc-300"
-                  >
-                    Username
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-2 top-2.5 h-4 w-4 text-zinc-500" />
-                    <Input
-                      id="username"
-                      placeholder="Filter by username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className="pl-8 bg-zinc-900 border-zinc-700 text-zinc-300"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label
-                    htmlFor="limit"
-                    className="text-sm font-medium text-zinc-300"
-                  >
-                    Limit
-                  </label>
-                  <Input
-                    id="limit"
-                    type="number"
-                    placeholder="Number of records"
-                    value={limit}
-                    onChange={(e) => setLimit(e.target.value)}
-                    min="1"
-                    className="bg-zinc-900 border-zinc-700 text-zinc-300"
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="showAllRecords"
+                    checked={showAllRecords}
+                    onChange={(e) => setShowAllRecords(e.target.checked)}
+                    className="rounded border-zinc-700 bg-zinc-900 text-green-500"
                   />
+                  <label
+                    htmlFor="showAllRecords"
+                    className="text-sm font-medium text-zinc-300"
+                  >
+                    Show all records (not just mine)
+                  </label>
                 </div>
+
+                {showAllRecords && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="userId"
+                        className="text-sm font-medium text-zinc-300"
+                      >
+                        User ID
+                      </label>
+                      <div className="relative">
+                        <Database className="absolute left-2 top-2.5 h-4 w-4 text-zinc-500" />
+                        <Input
+                          id="userId"
+                          placeholder="Filter by user ID"
+                          value={userId}
+                          onChange={(e) => setUserId(e.target.value)}
+                          className="pl-8 bg-zinc-900 border-zinc-700 text-zinc-300"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="username"
+                        className="text-sm font-medium text-zinc-300"
+                      >
+                        Username
+                      </label>
+                      <div className="relative">
+                        <User className="absolute left-2 top-2.5 h-4 w-4 text-zinc-500" />
+                        <Input
+                          id="username"
+                          placeholder="Filter by username"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          className="pl-8 bg-zinc-900 border-zinc-700 text-zinc-300"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="limit"
+                        className="text-sm font-medium text-zinc-300"
+                      >
+                        Limit
+                      </label>
+                      <Input
+                        id="limit"
+                        type="number"
+                        placeholder="Number of records"
+                        value={limit}
+                        onChange={(e) => setLimit(e.target.value)}
+                        min="1"
+                        className="bg-zinc-900 border-zinc-700 text-zinc-300"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
             <CardFooter className="flex justify-end gap-2">
@@ -157,14 +180,15 @@ export default function GranthaDeckViewer() {
                   setUserId("");
                   setUsername("");
                   setLimit("10");
+                  setShowAllRecords(false);
                 }}
-                className="bg-zinc-900 border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-700 cursor-pointer"
+                className="bg-zinc-900 border-zinc-700 text-zinc-300 hover:bg-zinc-800"
               >
                 Reset Filters
               </Button>
               <Button
                 onClick={() => refetch()}
-                className="bg-white hover:bg-zinc-200 text-black cursor-pointer"
+                className="bg-white hover:bg-zinc-200 text-black"
               >
                 Apply Filters
               </Button>
@@ -211,7 +235,7 @@ export default function GranthaDeckViewer() {
                 Showing {data?.granthaDeckRecords?.length || 0} records
               </p>
               <div className="flex gap-2">
-                {userId && (
+                {showAllRecords && userId && (
                   <Badge
                     variant="outline"
                     className="flex items-center gap-1 bg-zinc-900 border-zinc-700 text-zinc-300"
@@ -219,7 +243,7 @@ export default function GranthaDeckViewer() {
                     ID: {userId}
                   </Badge>
                 )}
-                {username && (
+                {showAllRecords && username && (
                   <Badge
                     variant="outline"
                     className="flex items-center gap-1 bg-zinc-900 border-zinc-700 text-zinc-300"
@@ -269,8 +293,8 @@ export default function GranthaDeckViewer() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => router.push(`/admin/dashboard/data/view/${deck.grantha_deck_id}`)}
-                        className="bg-zinc-800 border-zinc-700 hover:bg-white cursor-pointer text-zinc-300"
+                        onClick={() => router.push(`/dashboard/data/view/${deck.grantha_deck_id}`)}
+                        className="bg-zinc-800 border-zinc-700 hover:bg-zinc-700 text-zinc-300"
                       >
                         View Details
                       </Button>
@@ -284,7 +308,9 @@ export default function GranthaDeckViewer() {
                   No records found
                 </h3>
                 <p className="text-zinc-400 mt-1">
-                  Try changing your filters or adding new records
+                  {showAllRecords
+                    ? "Try changing your filters or adding new records"
+                    : "You haven't created any records yet"}
                 </p>
               </div>
             )}

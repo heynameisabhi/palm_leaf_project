@@ -34,7 +34,12 @@ export function Navbar() {
             {status === "loading" ? (
               <p className="text-white">Loading...</p>
             ) : session?.user ? (
-              <UserAccountNav user={session.user} />
+              <UserAccountNav user={{
+                name: session.user.name,
+                email: session.user.email,
+                image: session.user.image,
+                role: session.user.role
+              }} />
             ) : (
               <Button
                 asChild

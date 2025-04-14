@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
             total_leaves: totalLeaves,
             total_images: totalImages,
             stitch_or_nonstitch: "", 
+            physical_condition: "",
         }];
         fs.writeFileSync(path.join(outputDir, "GranthaDeck.csv"), parse(granthaDeckData));
         

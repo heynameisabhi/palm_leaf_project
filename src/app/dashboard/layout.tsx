@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Users, UserPlus, Database, FileSpreadsheet, ChevronRight, LayoutDashboard } from "lucide-react"
+import { Users, UserPlus, Database, FileSpreadsheet, ChevronRight, LayoutDashboard, BookOpen } from "lucide-react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -81,6 +81,18 @@ export default function DashboardLayout({
                   <span>Insert Data</span>
                 </Link>
                 <Link
+                  href="/dashboard/data/insert/author"
+                  className={cn(
+                    "flex items-center px-2 py-2 text-sm rounded-md transition-colors",
+                    pathname === "/dashboard/data/insert/author"
+                      ? "bg-zinc-800 text-emerald-400"
+                      : "text-zinc-400 hover:bg-zinc-800 hover:text-white",
+                  )}
+                >
+                  <BookOpen className="w-4 h-4 mr-3" />
+                  <span>Add Authors</span>
+                </Link>
+                <Link
                   href="/dashboard/data/view"
                   className={cn(
                     "flex items-center px-2 py-2 text-sm rounded-md transition-colors",
@@ -118,11 +130,11 @@ export default function DashboardLayout({
       {/* Main content */}
       <main
         className={cn(
-          "flex-1 min-w-0 overflow-auto transition-[margin-left] duration-300 ml-[80px]",
-          !collapsed && "ml-[300px]"
+          "flex-1 min-w-0 overflow-auto transition-[margin-left] duration-300 h-full",
+          collapsed ? "ml-[80px]" : "ml-[300px]"
         )}
       >
-        <div className="container p-2">{children}</div>
+        <div className="h-full w-full">{children}</div>
       </main>
     </div>
   )
