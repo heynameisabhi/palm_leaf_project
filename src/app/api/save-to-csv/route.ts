@@ -53,6 +53,9 @@ export async function POST(request: NextRequest) {
         console.log("Grantha.csv created successfully!")
 
 
+        console.log("mainGranthaImagesAndDetails", mainGranthaImagesAndDetails)
+
+
         // 3. ScannedImageAndProperties.csv
         const imageData = [
             ...mainGranthaImagesAndDetails.map((img: any) => ({
