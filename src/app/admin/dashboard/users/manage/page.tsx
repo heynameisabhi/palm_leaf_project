@@ -38,6 +38,7 @@ export default function ManageUsersPage() {
   const [users, setUsers] = useState<UserAccount[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserAccount | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { mutate: fetchAllUsers } = useMutation({
     mutationFn: async () => {
@@ -57,6 +58,17 @@ export default function ManageUsersPage() {
   useEffect(() => {
     fetchAllUsers();
   }, []);
+
+  // Filter users based on search query
+  const filteredUsers = users.filter(user => {
+    if (user.role.toUpperCase() === "ADMIN") return false;
+    
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      user.user_name.toLowerCase().includes(searchLower) ||
+      user.user_id.toLowerCase().includes(searchLower)
+    );
+  });
 
   // instead of useMutation() use useQuery()
   const toggleUserStatus = useMutation({
@@ -98,16 +110,12 @@ export default function ManageUsersPage() {
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-zinc-500" />
               <Input
-                placeholder="Search users..."
+                placeholder="Search by name or ID..."
                 className="bg-zinc-800 border-zinc-700 pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Button
-              variant="outline"
-              className="border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
-            >
-              Filter
-            </Button>
           </div>
 
           <Table>
@@ -125,7 +133,7 @@ export default function ManageUsersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
+              {filteredUsers.map((user) => (
                 <TableRow
                   key={user.user_id}
                   className="border-zinc-700 hover:bg-zinc-800"

@@ -18,6 +18,23 @@ app.add_middleware(
 class FolderPathRequest(BaseModel):
     folder_path: str
 
+# Helper function to make DPI values JSON serializable
+def make_dpi_serializable(dpi_value):
+    if dpi_value is None:
+        return None
+    
+    try:
+        # Handle tuple of IFDRational objects
+        if isinstance(dpi_value, tuple):
+            return tuple(float(x) if hasattr(x, "__float__") else x for x in dpi_value)
+        # Handle single IFDRational
+        elif hasattr(dpi_value, "__float__"):
+            return float(dpi_value)
+        else:
+            return "Unknown"
+    except Exception:
+        return "Unknown"
+
 def get_folder_structure(root_path):
     folder_structure = {"path": root_path, "files": [], "subfolders": []}
 
@@ -36,13 +53,17 @@ def get_folder_structure(root_path):
             }
 
             # Get image resolution and DPI of an image
-            if extension in [".jpg", ".png", ".jpeg", ".webp", ".gif", ".tiff"]:
+            if extension in [".jpg", ".png", ".jpeg", ".webp", ".gif", ".tiff", ".tif", ".dng"]:
                 try:
                     with Image.open(file_path) as img:
                         file_info["resolution"] = img.size  # (width, height)
-                        file_info["dpi"] = img.info.get("dpi", "Unknown")  
+                        # Handle DPI values to make them JSON serializable
+                        dpi = img.info.get("dpi")
+                        file_info["dpi"] = make_dpi_serializable(dpi)
                 except Exception as e:
                     file_info["error"] = f"Could not process image: {str(e)}"
+                    file_info["resolution"] = None
+                    file_info["dpi"] = None
 
             current_folder["files"].append(file_info)
 
@@ -56,8 +77,13 @@ def get_folder_structure(root_path):
             folder_structure = current_folder
 
     # Compute total images at the end to get the correct count of the images in the main folder
-    total_images = sum(1 for f in folder_structure["files"])
-    total_images += sum(subfolder["totalImages"] for subfolder in folder_structure["subfolders"])
+    total_images = sum(1 for f in folder_structure["files"] 
+                     if os.path.splitext(f["name"])[-1].lower() in 
+                     [".jpg", ".png", ".jpeg", ".webp", ".gif", ".tiff", ".tif", ".dng"])
+    
+    # Sum the total images from subfolders
+    for subfolder in folder_structure.get("subfolders", []):
+        total_images += subfolder.get("totalImages", 0)
 
     return {**folder_structure, "totalImages": total_images}
 
@@ -68,6 +94,8 @@ async def get_folder_details(data: FolderPathRequest):
     if not os.path.exists(folder_path) or not os.path.isdir(folder_path):
         return {"error": "Invalid folder path"}
 
-    folder_data = get_folder_structure(folder_path)
-
-    return folder_data
+    try:
+        folder_data = get_folder_structure(folder_path)
+        return folder_data
+    except Exception as e:
+        return {"error": f"Error processing folder: {str(e)}"}

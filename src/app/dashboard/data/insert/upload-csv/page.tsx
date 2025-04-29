@@ -72,7 +72,7 @@ export default function CsvUploader() {
       })
 
       console.log("Response from the Backend API route: ", response.data)
-      toast.success("Data inserted successfully via CSV files.")
+      toast.success("Data inserted successfully and temporary CSV files have been cleaned up.")
       setSelectedFiles(null)
     } catch (error) {
       console.error("Error uploading files:", error)

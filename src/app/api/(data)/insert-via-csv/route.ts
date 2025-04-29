@@ -5,6 +5,36 @@ import { parse } from "csv-parse/sync";
 import { db } from "@/lib/db";
 import { authOptions, getAuthSession } from "@/lib/auth";
 import { getServerSession } from "next-auth";
+import { Prisma } from "@prisma/client";
+
+// Helper function to delete user CSV files
+const deleteUserCsvFiles = (userId: string) => {
+    try {
+        const outputDir = path.join(process.cwd(), "public", "csv");
+        
+        // Files to delete
+        const filesToDelete = [
+            `GranthaDeck_${userId}.csv`,
+            `Grantha_${userId}.csv`,
+            `ScannedImageAndProperties_${userId}.csv`
+        ];
+        
+        // Delete each file if it exists
+        filesToDelete.forEach(file => {
+            const filePath = path.join(outputDir, file);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+                console.log(`Deleted file: ${file}`);
+            } else {
+                console.log(`File not found: ${file}`);
+            }
+        });
+        return true;
+    } catch (error) {
+        console.error("Error deleting CSV files:", error);
+        return false;
+    }
+};
 
 export async function POST(request: NextRequest) {
     try {
@@ -12,148 +42,190 @@ export async function POST(request: NextRequest) {
 
         console.log("Session Data:", session);
 
-        if(!session) {
-            return NextResponse.json("Unauthorized", { status: 401 });
+        if(!session || !session.user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // Retrieve files from the form data
+        const userId = session.user.id;
 
+        // Retrieve files from the form data
         const formData = await request.formData();
         const files = formData.getAll("files") as File[];
 
         // Validate the number of files
         if (files.length !== 3) {
-            return NextResponse.json("Exactly 3 CSV files are required.", { status: 400 });
+            return NextResponse.json({ error: "Exactly 3 CSV files are required." }, { status: 400 });
         }
 
         // Sort the files by their filenames (this is done to maintain proper order of the csv files so that they can be properly extracted)
         files.sort((a, b) => a.name.localeCompare(b.name));
         
-        // console.log(files)
-
-        
         // Read and parse each CSV file
         const csvContents = await Promise.all(files.map(file => file.text()));
-        // console.log(csvContents)
-        const granthaData = parse(csvContents[0], { columns: true, skip_empty_lines: true });
-        const granthaDeckData = parse(csvContents[1], { columns: true, skip_empty_lines: true });
-        const scannedImagesData = parse(csvContents[2], { columns: true, skip_empty_lines: true });
+        
+        let granthaData, granthaDeckData, scannedImagesData;
+        
+        try {
+            granthaData = parse(csvContents[0], { columns: true, skip_empty_lines: true });
+            granthaDeckData = parse(csvContents[1], { columns: true, skip_empty_lines: true });
+            scannedImagesData = parse(csvContents[2], { columns: true, skip_empty_lines: true });
+        } catch (error) {
+            console.error("Error parsing CSV files:", error);
+            return NextResponse.json({ error: "Invalid CSV format. Please check your files." }, { status: 400 });
+        }
 
-        // console.log(scannedImagesData)
+        // Validate that we have at least one row in each CSV
+        if (!granthaDeckData?.length || !granthaData?.length || !scannedImagesData?.length) {
+            return NextResponse.json({ error: "One or more CSV files are empty" }, { status: 400 });
+        }
 
-        await db.$transaction(async (tx) => {
-            // 1. fill Grantha deck data
-
-            const granthaDeck = await tx.granthaDeck.create({
-                data: {
-                    grantha_deck_id: granthaDeckData[0].grantha_deck_id,
-                    grantha_deck_name: granthaDeckData[0].grantha_deck_name,
-                    grantha_owner_name: granthaDeckData[0].grantha_owner_name,
-                    grantha_source_address: granthaDeckData[0].grantha_source_address,
-                    length_in_cms: parseFloat(granthaDeckData[0].length_in_cms),
-                    width_in_cms: parseFloat(granthaDeckData[0].width_in_cms),
-                    total_leaves: parseInt(granthaDeckData[0].total_leaves),
-                    total_images: parseInt(granthaDeckData[0].total_images),
-                    stitch_or_nonstitch: granthaDeckData[0].stitch_or_nonstitch,
-                    user_id: session?.user.id,
-                },
-            });
-
-            // 2. fill Grantha data
-
-            console.log("Starting to fill grantha data");
-
-            for (const grantha of granthaData) {
-                // check if author is present
-                let author = await tx.author.findFirst({
-                    where: {
-                        author_name: {
-                            equals: grantha.author.trim().toLowerCase(),
-                            mode: "insensitive",
-                        },
+        try {
+            // Use a transaction to ensure atomicity - all operations succeed or all fail
+            await db.$transaction(async (tx) => {
+                // 1. fill Grantha deck data
+                const granthaDeck = await tx.granthaDeck.create({
+                    data: {
+                        grantha_deck_id: granthaDeckData[0].grantha_deck_id,
+                        grantha_deck_name: granthaDeckData[0].grantha_deck_name,
+                        grantha_owner_name: granthaDeckData[0].grantha_owner_name,
+                        grantha_source_address: granthaDeckData[0].grantha_source_address,
+                        length_in_cms: parseFloat(granthaDeckData[0].length_in_cms) || 0,
+                        width_in_cms: parseFloat(granthaDeckData[0].width_in_cms) || 0,
+                        total_leaves: parseInt(granthaDeckData[0].total_leaves) || 0,
+                        total_images: parseInt(granthaDeckData[0].total_images) || 0,
+                        stitch_or_nonstitch: granthaDeckData[0].stitch_or_nonstitch,
+                        physical_condition: granthaDeckData[0].physical_condition || "",
+                        user_id: userId,
                     },
                 });
 
-                console.log(author?.author_name)
+                // 2. fill Grantha data
+                console.log("Starting to fill grantha data");
 
-                if (!author) {
-                    return NextResponse.json(`Author ${grantha.author} not found!`,{ status: 404 })
-                }
-
-                // Check if the language is already present
-                let language = await tx.language.findFirst({
-                    where: {
-                        language_name: {
-                            equals: grantha.language.trim().toLowerCase(),
-                            mode: "insensitive",
+                for (const grantha of granthaData) {
+                    // Validate required fields
+                    if (!grantha.grantha_id || !grantha.author || !grantha.language) {
+                        throw new Error(`Missing required fields in Grantha data: ${JSON.stringify(grantha)}`);
+                    }
+                    
+                    // check if author is present
+                    let author = await tx.author.findFirst({
+                        where: {
+                            author_name: {
+                                equals: grantha.author.trim().toLowerCase(),
+                                mode: "insensitive",
+                            },
                         },
-                    },
-                });
+                    });
 
-                if (!language) {
-                    language = await tx.language.create({
-                        data: { language_name: grantha.language.trim() },
+                    if (!author) {
+                        throw new Error(`Author ${grantha.author} not found!`);
+                    }
+
+                    // Check if the language is already present
+                    let language = await tx.language.findFirst({
+                        where: {
+                            language_name: {
+                                equals: grantha.language.trim().toLowerCase(),
+                                mode: "insensitive",
+                            },
+                        },
+                    });
+
+                    if (!language) {
+                        language = await tx.language.create({
+                            data: { language_name: grantha.language.trim() },
+                        });
+                    }
+
+                    await tx.grantha.create({
+                        data: {
+                            grantha_id: grantha.grantha_id,
+                            grantha_deck_id: granthaDeck.grantha_deck_id,
+                            grantha_name: grantha.grantha_name || "",
+                            language_id: language.language_id,
+                            author_id: author.author_id,
+                            remarks: grantha.remarks || "",
+                            description: grantha.description || "",
+                        },
                     });
                 }
 
-                await tx.grantha.create({
-                    data: {
-                        grantha_id: grantha.grantha_id,
-                        grantha_deck_id: granthaDeck.grantha_deck_id,
-                        grantha_name: grantha.grantha_name,
-                        language_id: language.language_id,
-                        author_id: author.author_id,
-                        remarks: grantha.remarks,
-                        description: grantha.description,
-                    },
-                });
+                console.log("Starting to fill image data");
+                for (const image of scannedImagesData) {
+                    // Validate required fields
+                    if (!image.image_name || !image.image_url || !image.grantha_id) {
+                        throw new Error(`Missing required fields in ScannedImage data: ${JSON.stringify(image)}`);
+                    }
+                    
+                    // 3. Fill Scanned Image Data
+                    const scannedImage = await tx.scannedImage.create({
+                        data: {
+                            image_name: image.image_name,
+                            image_url: image.image_url,
+                            grantha_id: image.grantha_id,
+                        },
+                    });
 
-                console.log("Completed filling grantha data inside loop");
+                    // 4. Fill Scanning Properties Data
+                    await tx.scanningProperties.create({
+                        data: {
+                            image_id: scannedImage.image_id,
+                            worked_by: image.worked_by || "",
+                            file_format: image.file_format || "UNKNOWN",
+                            scanner_model: image.scanner_model || "UNKNOWN",
+                            resolution_dpi: image.resolution_dpi || "UNKNOWN",
+                            lighting_conditions: image.lighting_conditions || "",
+                            color_depth: image.color_depth || "",
+                            scanning_start_date: image.scanning_start_date || null,
+                            scanning_completed_date: image.scanning_completed_date || null,
+                            post_scanning_completed_date: image.post_scanning_completed_date || null,
+                            horizontal_or_vertical_scan: image.horizontal_or_vertical_scan || "",
+                        },
+                    });
+                }
+
+                console.log("Completed database transaction successfully!");
+            }, {
+                // Set a longer timeout for larger datasets
+                timeout: 30000,
+                // Maximum number of retries for the transaction
+                maxWait: 5000,
+            });
+            
+            // After successful transaction, delete the user's CSV files
+            const filesDeleted = deleteUserCsvFiles(userId);
+            
+            return NextResponse.json({ 
+                message: "Data inserted successfully.",
+                filesDeleted: filesDeleted 
+            }, { status: 200 });
+            
+        } catch (error) {
+            // roll back on transaction failure
+            console.error("Transaction failed:", error);
+            
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                if (error.code === 'P2002') {
+                    return NextResponse.json({ 
+                        error: "A record with this ID already exists. Please use unique identifiers." 
+                    }, { status: 409 });
+                }
+                
+                if (error.code === 'P2003') {
+                    return NextResponse.json({ 
+                        error: "Foreign key constraint failed. Please check that all referenced IDs exist." 
+                    }, { status: 400 });
+                }
             }
-
-            console.log("Completed filling grantha data")
-
-            console.log("Starting to fill image data")
-            for (const image of scannedImagesData) {
-                // 3. Fill Scanned Image Data
-                console.log(image)
-                const scannedImage = await tx.scannedImage.create({
-                    data: {
-                        // the image_id for the scannedImage is automatically generated by prisma
-                        
-                        // image_id: image.image_id,
-                        image_name: image.image_name,
-                        image_url: image.image_url,
-                        grantha_id: image.grantha_id,
-                    },
-                });
-
-                // 4. Fill Scanning Properties Data
-
-                await tx.scanningProperties.create({
-                    data: {
-                        image_id: scannedImage.image_id,
-                        worked_by: image.worked_by,
-                        file_format: image.file_format,
-                        scanner_model: image.scanner_model,
-                        resolution_dpi: image.resolution_dpi,
-                        lighting_conditions: image.lighting_conditions,
-                        color_depth: image.color_depth,
-                        scanning_start_date: image.scanning_start_date,
-                        scanning_completed_date: image.scanning_completed_date,
-                        post_scanning_completed_date: image.post_scanning_completed_date,
-                        horizontal_or_vertical_scan: image.horizontal_or_vertical_scan,
-                    },
-                });
-            }
-
-            console.log("completed filling image data!")
-        })
-
-        return NextResponse.json("Data inserted successfully.", { status: 200 });
+            
+            return NextResponse.json({ 
+                error: error instanceof Error ? error.message : "An unknown error occurred during data insertion" 
+            }, { status: 500 });
+        }
         
     } catch (error: any) {
-        console.log(error.message)
-        return NextResponse.json(error.message, { status: 500 });
+        console.error("Error processing request:", error);
+        return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
     }
 }

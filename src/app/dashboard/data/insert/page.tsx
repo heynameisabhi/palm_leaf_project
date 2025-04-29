@@ -72,6 +72,9 @@ const page: React.FC = () => {
   const [folderDetails, setFolderDetails] = useState<FolderDetails | null>(
     null
   );
+  const [scanType, setScanType] = useState<string>("H-Scan");
+  const [stitchType, setStitchType] = useState<string>("stitch");
+  const [physicalCondition, setPhysicalCondition] = useState<string>("");
 
   const [showCreateCsvButton, setShowCreateCsvButton] =
     useState<boolean>(false);
@@ -144,6 +147,9 @@ const page: React.FC = () => {
         totalLeaves,
         mainGranthaImagesAndDetails,
         subGranthas,
+        scanType,
+        stitchType,
+        physicalCondition: physicalCondition.toLowerCase(),
       });
     }
   };
@@ -337,9 +343,59 @@ const page: React.FC = () => {
       </Card>
 
       {showCreateCsvButton && (
+        <Card className="w-full max-w-md border-[#1a1a1a] bg-black shadow-xl backdrop-blur-md mt-6">
+          <CardHeader className="border-b border-[#1a1a1a] bg-black">
+            <CardTitle className="text-white flex items-center gap-2">
+              <File className="h-5 w-5 text-green-400" />
+              Additional Details
+            </CardTitle>
+            <CardDescription className="text-gray-400">
+              Please provide the following details before creating CSV
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6 space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Scan Type</label>
+              <select
+                value={scanType}
+                onChange={(e) => setScanType(e.target.value)}
+                className="w-full bg-[#121212] border-[#1a1a1a] text-white rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500"
+              >
+                <option value="H-Scan">H-Scan</option>
+                <option value="V-Scan">V-Scan</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Stitch Type</label>
+              <select
+                value={stitchType}
+                onChange={(e) => setStitchType(e.target.value)}
+                className="w-full bg-[#121212] border-[#1a1a1a] text-white rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500"
+              >
+                <option value="stitch">Stitch</option>
+                <option value="non-stitch">Non-Stitch</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Physical Condition</label>
+              <Input
+                type="text"
+                value={physicalCondition}
+                onChange={(e) => setPhysicalCondition(e.target.value)}
+                placeholder="Enter physical condition..."
+                className="bg-[#121212] border-[#1a1a1a] text-white focus:ring-green-500 focus:border-green-500"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {showCreateCsvButton && (
         <Button
           onClick={() => extractGranthaDetails(folderDetails)}
-          className="mt-10 cursor-pointer bg-gradient-to-r from-green-950 to-green-600 text-white font-semibold py-4 px-6 rounded-lg transition-all"
+          className="mt-6 cursor-pointer bg-gradient-to-r from-green-950 to-green-600 text-white font-semibold py-4 px-6 rounded-lg transition-all"
         >
           Create CSV
         </Button>

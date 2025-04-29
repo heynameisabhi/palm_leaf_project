@@ -1,38 +1,50 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getAuthSession } from "@/lib/auth";
 
+// GET: Retrieve a specific Grantha Deck by ID
 export async function GET(
   request: NextRequest,
   { params }: { params: { deckId: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
+    const session = await getAuthSession();
+    if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-
-    // const { searchParams } = request.nextUrl;
-    
     const deckId = params.deckId;
+    if (!deckId) {
+      return NextResponse.json(
+        { error: "Deck ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Fetch the Grantha Deck with additional data
     const granthaDeck = await db.granthaDeck.findUnique({
-      where: { grantha_deck_id: deckId },
+      where: {
+        grantha_deck_id: deckId,
+      },
       include: {
+        _count: {
+          select: { granthas: true },
+        },
         user: {
           select: {
+            user_id: true,
             user_name: true,
+            email: true,
           },
         },
         granthas: {
-          include: {
-            language: true,
-            author: true,
+          select: {
+            grantha_id: true,
+            grantha_name: true,
+            _count: {
+              select: { scannedImages: true },
+            },
           },
-        },
-        _count: {
-          select: { granthas: true },
         },
       },
     });
@@ -44,8 +56,7 @@ export async function GET(
       );
     }
 
-    
-    return NextResponse.json({ granthaDeck });
+    return NextResponse.json(granthaDeck);
   } catch (error) {
     console.error("Error fetching Grantha Deck:", error);
     return NextResponse.json(
@@ -55,51 +66,74 @@ export async function GET(
   }
 }
 
-export async function PUT(
+// PATCH: Update a specific Grantha Deck
+export async function PATCH(
   request: NextRequest,
   { params }: { params: { deckId: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
+    const session = await getAuthSession();
+    if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const deckId = params.deckId;
-    const data = await request.json();
+    if (!deckId) {
+      return NextResponse.json(
+        { error: "Deck ID is required" },
+        { status: 400 }
+      );
+    }
 
-    // Check if the deck exists and if the user has permission
+    // Verify the user owns this deck
     const existingDeck = await db.granthaDeck.findUnique({
-      where: { grantha_deck_id: deckId },
+      where: {
+        grantha_deck_id: deckId,
+      },
+      select: {
+        user_id: true,
+      },
     });
 
     if (!existingDeck) {
-      return NextResponse.json({ error: "Grantha Deck not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Grantha Deck not found" },
+        { status: 404 }
+      );
     }
 
-    if (session.user.role !== "ADMIN" && existingDeck.user_id !== session.user.id) {
-      return NextResponse.json({ error: "Not authorized to edit this deck" }, { status: 403 });
+    // Check if the current user is the owner
+    if (existingDeck.user_id !== session.user.id) {
+      return NextResponse.json(
+        { error: "You don't have permission to update this deck" },
+        { status: 403 }
+      );
     }
 
-    // Update the deck
+    // Parse the request body
+    const data = await request.json();
+
+    // Update the Grantha Deck
     const updatedDeck = await db.granthaDeck.update({
-      where: { grantha_deck_id: deckId },
+      where: {
+        grantha_deck_id: deckId,
+      },
       data: {
         grantha_deck_name: data.grantha_deck_name,
         grantha_owner_name: data.grantha_owner_name,
         grantha_source_address: data.grantha_source_address,
-        length_in_cms: data.length_in_cms ? parseFloat(data.length_in_cms) : null,
-        width_in_cms: data.width_in_cms ? parseFloat(data.width_in_cms) : null,
-        total_leaves: data.total_leaves ? parseInt(data.total_leaves) : null,
-        total_images: data.total_images ? parseInt(data.total_images) : null,
+        length_in_cms: data.length_in_cms,
+        width_in_cms: data.width_in_cms,
+        total_leaves: data.total_leaves,
+        total_images: data.total_images,
         stitch_or_nonstitch: data.stitch_or_nonstitch,
         physical_condition: data.physical_condition,
       },
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: "Grantha Deck updated successfully",
-      granthaDeck: updatedDeck 
+      deck: updatedDeck,
     });
   } catch (error) {
     console.error("Error updating Grantha Deck:", error);

@@ -97,8 +97,10 @@ export default function DashboardLayout({
           </div>
 
           {/* Data Management */}
+          {/* Data Management not provided to the admin*/}
+
           <div>
-            <button
+            {/* <button
               onClick={() => setDataManagementOpen(!dataManagementOpen)}
               className={cn(
                 "flex items-center justify-center w-full px-2 py-2 text-sm rounded-md transition-colors",
@@ -117,10 +119,10 @@ export default function DashboardLayout({
                   />
                 </>
               )}
-            </button>
+            </button> */}
 
             {/* Submenu */}
-            {dataManagementOpen && !collapsed && (
+            {/* {dataManagementOpen && !collapsed && (
               <div className="ml-6 mt-1 space-y-1">
                 <Link
                   href="/admin/dashboard/data/insert"
@@ -159,7 +161,7 @@ export default function DashboardLayout({
                   <span>View Data</span>
                 </Link>
               </div>
-            )}
+            )} */}
           </div>
         </nav>
 
