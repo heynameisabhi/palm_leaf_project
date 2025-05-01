@@ -72,9 +72,11 @@ const page: React.FC = () => {
   const [folderDetails, setFolderDetails] = useState<FolderDetails | null>(
     null
   );
+
   const [scanType, setScanType] = useState<string>("H-Scan");
   const [stitchType, setStitchType] = useState<string>("stitch");
   const [physicalCondition, setPhysicalCondition] = useState<string>("");
+  const [scannerModel, setScannerModel] = useState<string>("");
 
   const [showCreateCsvButton, setShowCreateCsvButton] =
     useState<boolean>(false);
@@ -375,6 +377,19 @@ const page: React.FC = () => {
               >
                 <option value="stitch">Stitch</option>
                 <option value="non-stitch">Non-Stitch</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Scanner Model</label>
+              <select
+                value={scannerModel}
+                onChange={(e) => setScannerModel(e.target.value)}
+                className="w-full bg-[#121212] border-[#1a1a1a] text-white rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500"
+              >
+                <option value="Canon 12000">Canon CanoScan LiDE 600F</option>
+                <option value="Canon 14000">Epson Perfection V600</option>
+                <option value="Canon 16000">Canon 16000</option>
               </select>
             </div>
 

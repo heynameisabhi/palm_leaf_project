@@ -41,7 +41,9 @@ export async function POST(request: NextRequest) {
             grantha_deck_id: granthaDeckId,
             total_leaves: totalLeaves,
             total_images: totalImages,
-            created_by: userId,
+
+            // this field need not be filled here
+            // created_by: userId,
             stitch_or_nonstitch: stitchType,
             physical_condition: physicalCondition,
             grantha_deck_name: "", 
@@ -58,7 +60,9 @@ export async function POST(request: NextRequest) {
         const granthaData = [
             {
                 grantha_id: `${granthaDeckId}_main_grantha`,
-                created_by: userId,
+
+                // this is not required to be filled
+                // created_by: userId,
                 grantha_name: "", 
                 language: "", 
                 author: "", 
@@ -67,7 +71,7 @@ export async function POST(request: NextRequest) {
             },
             ...subGranthas.map((sub: any) => ({
                 grantha_id: sub.subgrantha_name,
-                created_by: userId,
+                // created_by: userId,
                 grantha_name: "", 
                 language: "", 
                 author: "", 
@@ -90,7 +94,7 @@ export async function POST(request: NextRequest) {
                 file_format: img.extension.replace(".", "").toUpperCase(),
                 resolution_dpi: Array.isArray(img.dpi) ? img.dpi.map(Math.round).join("x") : "Unknown",
                 horizontal_or_vertical_scan: scanType,
-                created_by: userId,
+                // created_by: userId,
                 worked_by: "", 
                 scanner_model: "", 
                 lighting_conditions: "", 
@@ -107,7 +111,7 @@ export async function POST(request: NextRequest) {
                     file_format: img.extension.replace(".", "").toUpperCase(),
                     resolution_dpi: Array.isArray(img.dpi) ? img.dpi.map(Math.round).join("x") : "Unknown",
                     horizontal_or_vertical_scan: scanType,
-                    created_by: userId,
+                    // created_by: userId,
                     worked_by: "", 
                     scanner_model: "", 
                     lighting_conditions: "", 

@@ -11,9 +11,10 @@ export async function GET(request: NextRequest) {
 
     // Extract query parameters
     const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get("userId") || session.user.id;
+    const userId = searchParams.get("userId") || "";
     const username = searchParams.get("username") || "";
     const deckName = searchParams.get("deckName") || "";
+    const deckId = searchParams.get("deckId") || "";
     const limitParam = searchParams.get("limit");
     const sortField = searchParams.get("sortField") || "createdAt";
     const sortOrder = searchParams.get("sortOrder") || "desc";
@@ -33,6 +34,14 @@ export async function GET(request: NextRequest) {
     if (deckName) {
       whereClause.grantha_deck_name = {
         contains: deckName,
+        mode: 'insensitive',
+      };
+    }
+
+    // If a deck ID is provided, filter by it
+    if (deckId) {
+      whereClause.grantha_deck_id = {
+        contains: deckId,
         mode: 'insensitive',
       };
     }
