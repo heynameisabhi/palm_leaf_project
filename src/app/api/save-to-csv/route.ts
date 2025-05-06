@@ -28,8 +28,11 @@ export async function POST(request: NextRequest) {
             subGranthas,
             scanType,
             stitchType,
-            physicalCondition
+            physicalCondition,
+            scannerModel
         } = reqBody;
+
+        console.log("DEBUG: Scanner Model", scannerModel);
         
         // Create user-specific filenames
         const userGranthaDeckFile = `GranthaDeck_${userId}.csv`;
@@ -95,8 +98,8 @@ export async function POST(request: NextRequest) {
                 resolution_dpi: Array.isArray(img.dpi) ? img.dpi.map(Math.round).join("x") : "Unknown",
                 horizontal_or_vertical_scan: scanType,
                 // created_by: userId,
+                scanner_model: scannerModel, 
                 worked_by: "", 
-                scanner_model: "", 
                 lighting_conditions: "", 
                 color_depth: "", 
                 scanning_start_date: "", 
@@ -112,8 +115,8 @@ export async function POST(request: NextRequest) {
                     resolution_dpi: Array.isArray(img.dpi) ? img.dpi.map(Math.round).join("x") : "Unknown",
                     horizontal_or_vertical_scan: scanType,
                     // created_by: userId,
+                    scanner_model: scannerModel, 
                     worked_by: "", 
-                    scanner_model: "", 
                     lighting_conditions: "", 
                     color_depth: "", 
                     scanning_start_date: "", 

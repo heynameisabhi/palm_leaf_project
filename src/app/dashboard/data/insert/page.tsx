@@ -143,6 +143,8 @@ const page: React.FC = () => {
       );
       console.log("SubGranthas:", subGranthas);
 
+      console.log("DEBUGGING IN FRONTEND: Scanner Model:", scannerModel);
+
       saveDetailsToCSV({
         granthaDeckId,
         totalImages,
@@ -152,6 +154,7 @@ const page: React.FC = () => {
         scanType,
         stitchType,
         physicalCondition: physicalCondition.toLowerCase(),
+        scannerModel,
       });
     }
   };
@@ -387,8 +390,8 @@ const page: React.FC = () => {
                 onChange={(e) => setScannerModel(e.target.value)}
                 className="w-full bg-[#121212] border-[#1a1a1a] text-white rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500"
               >
-                <option value="Canon 12000">Canon CanoScan LiDE 600F</option>
-                <option value="Canon 14000">Epson Perfection V600</option>
+                <option value="Canon CanoScan LiDE 600F">Canon CanoScan LiDE 600F</option>
+                <option value="Epson Perfection V600">Epson Perfection V600</option>
                 <option value="Canon 16000">Canon 16000</option>
               </select>
             </div>
