@@ -12,6 +12,7 @@ import {
   AlertCircle,
   Search,
   FolderOpen,
+  FileSpreadsheet,
 } from "lucide-react";
 import {
   Card,
@@ -430,6 +431,19 @@ const page: React.FC = () => {
           </Link>
         </>
       )}
+
+      <CardFooter className="border-t border-[#1a1a1a] bg-black flex justify-between">
+        <div className="text-xs text-gray-500 flex items-center">
+          <AlertCircle className="h-3 w-3 mr-1" /> Supported image formats: JPG, PNG, JPEG, WEBP, GIF, TIFF, TIF, DNG
+        </div>
+        <Link
+          href="/dashboard/data/insert/bulk-insertion"
+          className="text-xs text-green-400 hover:text-green-300 hover:underline flex items-center gap-1"
+        >
+          <FileSpreadsheet className="h-3 w-3" />
+          Bulk Data Insertion
+        </Link>
+      </CardFooter>
     </div>
   );
 };

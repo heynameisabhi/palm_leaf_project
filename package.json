@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"next dev --turbopack\" \"uvicorn backend.main:app --reload --port 8000\"",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "backend": "uvicorn backend.main:app --port 8000"
+    "backend": "cd backend && python main.py",
+    "dev:all": "concurrently \"npm run dev\" \"npm run backend\""
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
@@ -45,6 +46,7 @@
     "prisma": "^6.4.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-dropzone": "^14.3.8",
     "react-hook-form": "^7.56.1",
     "recharts": "^2.15.2",
     "sharp": "^0.34.1",

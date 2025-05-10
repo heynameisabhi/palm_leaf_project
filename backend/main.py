@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import os
 from PIL import Image
 from fastapi.middleware.cors import CORSMiddleware
+from bulk_insertion import add_bulk_insertion_routes
 
 app = FastAPI()
 
@@ -99,3 +100,10 @@ async def get_folder_details(data: FolderPathRequest):
         return folder_data
     except Exception as e:
         return {"error": f"Error processing folder: {str(e)}"}
+
+# Add the bulk insertion routes
+add_bulk_insertion_routes(app)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
