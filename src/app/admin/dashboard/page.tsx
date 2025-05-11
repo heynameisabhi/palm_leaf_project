@@ -138,6 +138,13 @@ export default function AdminDashboard() {
                             <Clock className="w-4 h-4 mr-1" />
                             Last login: Today
                         </Badge>
+                        <button
+                            onClick={() => router.push('/admin/dashboard/generate-report')}
+                            className="flex items-center gap-2 px-3 py-2 text-xs bg-gradient-to-br from-blue-700 to-violet-700 cursor-pointer hover:bg-blue-700 text-white rounded-md transition-colors"
+                        >
+                            <FileText className="w-4 h-4" />
+                            Generate Report
+                        </button>
                     </div>
                 </div>
 
