@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Users, UserPlus, Database, FileSpreadsheet, ChevronRight, LayoutDashboard, BookOpen } from "lucide-react"
+import { Users, UserPlus, Database, DatabaseZap, FileSpreadsheet, ChevronRight, LayoutDashboard, BookOpen } from "lucide-react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -79,6 +79,18 @@ export default function DashboardLayout({
                 >
                   <Database className="w-4 h-4 mr-3" />
                   <span>Insert Data</span>
+                </Link>
+                <Link
+                  href="/dashboard/data/insert/bulk-insertion"
+                  className={cn(
+                    "flex items-center px-2 py-2 text-sm rounded-md transition-colors",
+                    pathname === "/dashboard/data/insert/bulk-insertion"
+                      ? "bg-zinc-800 text-emerald-400"
+                      : "text-zinc-400 hover:bg-zinc-800 hover:text-white",
+                  )}
+                >
+                  <DatabaseZap className="w-4 h-4 mr-3" />
+                  <span>Bulk Insertion</span>
                 </Link>
                 <Link
                   href="/dashboard/data/insert/author"
