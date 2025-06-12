@@ -432,7 +432,7 @@ const page: React.FC = () => {
         </>
       )}
 
-      <CardFooter className="border-t border-[#1a1a1a] bg-black flex justify-between">
+      <CardFooter className="border-t border-[#1a1a1a] bg-black flex justify-between mt-10 gap-2">
         <div className="text-xs text-gray-500 flex items-center">
           <AlertCircle className="h-3 w-3 mr-1" /> Supported image formats: JPG, PNG, JPEG, WEBP, GIF, TIFF, TIF, DNG
         </div>
