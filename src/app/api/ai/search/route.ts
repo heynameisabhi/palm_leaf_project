@@ -31,7 +31,6 @@ interface RequestBody {
   query: string;
 }
 
-// For App Router (app/api/search/manuscripts/route.ts)
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body: RequestBody = await request.json();
@@ -56,28 +55,28 @@ interface NextApiRequestWithBody extends NextApiRequest {
   body: RequestBody;
 }
 
-export default async function handler(
-  req: NextApiRequestWithBody,
-  res: NextApiResponse<SearchResponse | { error: string }>
-): Promise<void> {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+// export default async function handler(
+//   req: NextApiRequestWithBody,
+//   res: NextApiResponse<SearchResponse | { error: string }>
+// ): Promise<void> {
+//   if (req.method !== 'POST') {
+//     return res.status(405).json({ error: 'Method not allowed' });
+//   }
 
-  try {
-    const { query } = req.body;
+//   try {
+//     const { query } = req.body;
     
-    if (!query) {
-      return res.status(400).json({ error: 'Query is required' });
-    }
+//     if (!query) {
+//       return res.status(400).json({ error: 'Query is required' });
+//     }
 
-    const results = await searchManuscripts(query);
-    res.json(results);
-  } catch (error) {
-    console.error('Search error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-}
+//     const results = await searchManuscripts(query);
+//     res.json(results);
+//   } catch (error) {
+//     console.error('Search error:', error);
+//     res.status(500).json({ error: 'Internal server error' });
+//   }
+// }
 
 async function searchManuscripts(userQuery: string): Promise<SearchResponse> {
   try {

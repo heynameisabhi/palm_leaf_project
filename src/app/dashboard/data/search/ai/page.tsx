@@ -496,7 +496,7 @@ export default function SearchPage(): JSX.Element {
                   </div>
                   <input
                     type="text"
-                    placeholder="Enter your search query (e.g., 'Find manuscripts by author Raghavan', 'Show stitched manuscripts')"
+                    placeholder="Enter your search query..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyPress={handleKeyPress}
@@ -547,11 +547,13 @@ export default function SearchPage(): JSX.Element {
             <div className="flex flex-wrap gap-2">
               {[
                 "Find manuscripts by author Raghavan",
-                "Show stitched manuscripts",
-                "Large manuscripts over 50cm",
+                "Show manuscripts with stitch type as just non-stitch",
+                "Large manuscripts over length 50cm",
+                "Show manuscripts between width 3cm-4cm",
                 "Sanskrit manuscripts",
-                "Manuscripts in poor condition",
+                "Manuscripts in bad condition",
                 "Show all manuscripts",
+                "Show all grantha decks inserted by the user with user_name test"
               ].map((example: string) => (
                 <button
                   key={example}
