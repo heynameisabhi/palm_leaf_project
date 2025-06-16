@@ -37,6 +37,7 @@ export async function GET(
             image_id: true,
             image_name: true,
             image_url: true,
+            scanningProperties: true,
           },
         },
       },

@@ -408,7 +408,10 @@ export default function GranthaDeckViewer() {
                         </div>
                         <div className="text-zinc-400">{deck._count.granthas}</div>
                         <div className="text-zinc-400">{formatTimeAgo(new Date(deck.createdAt))}</div>
-                        <div className="text-zinc-400">{deck.grantha_deck_id.substring(0, 6)}</div>
+
+                        
+                        {/* <div className="text-zinc-400">{deck.grantha_deck_id.substring(0, 6)}</div> */}
+                        <div className="text-zinc-400">{deck.grantha_deck_id}</div>
                         <div className="flex gap-2">
                           {deck.user_id === session?.user?.id && (
                             <Button

@@ -28,9 +28,36 @@ import {
   Languages,
   BookMarked,
   Image as ImageIcon,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  Download,
+  Info,
 } from "lucide-react";
 import { formatTimeAgo } from "@/helpers/formatTime";
 import Image from "next/image";
+
+type ScannedImage = {
+  image_id: string;
+  image_name: string;
+  image_url: string;
+  scanningProperties?: {
+    scan_id?: string;
+    resolution_dpi?: string;
+    file_format?: string;
+    worked_by?: string;
+    scanner_model?: string;
+    color_depth?: string;
+    scanning_start_date?: string;
+    scanning_completed_date?: string;
+    post_scanning_completed_date?: string;
+    lighting_conditions?: string;
+    horizontal_or_vertical_scan?: string;
+  };
+};
 
 type Grantha = {
   grantha_id: string;
@@ -63,11 +90,7 @@ type Grantha = {
       user_name: string;
     };
   };
-  scannedImages?: {
-    image_id: string;
-    image_name: string;
-    image_url: string;
-  }[];
+  scannedImages?: ScannedImage[];
 };
 
 interface PageParams {
@@ -76,11 +99,340 @@ interface PageParams {
   };
 }
 
+interface ImageModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  images: ScannedImage[];
+  initialIndex: number;
+}
+
+function ImageModal({ isOpen, onClose, images, initialIndex }: ImageModalProps) {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [showDetails, setShowDetails] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+
+  if (!isOpen || !images.length) return null;
+
+  const currentImage = images[currentIndex];
+
+  const getImageUrl = (imagePath: string) => {
+    const isTiff = imagePath.toLowerCase().endsWith('.tif') || 
+                   imagePath.toLowerCase().endsWith('.tiff');
+    
+    if (isTiff) {
+      return `/api/images?path=${encodeURIComponent(imagePath)}&format=jpeg`;
+    }
+    
+    return `/api/images?path=${encodeURIComponent(imagePath)}`;
+  };
+
+  const nextImage = () => {
+    setCurrentIndex((prev) => (prev + 1) % images.length);
+    setZoom(1);
+    setRotation(0);
+    setImageLoading(true);
+  };
+
+  const prevImage = () => {
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+    setZoom(1);
+    setRotation(0);
+    setImageLoading(true);
+  };
+
+  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.25, 3));
+  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.25, 0.25));
+  const handleRotate = () => setRotation(prev => (prev + 90) % 360);
+
+  const handleDownload = async () => {
+    try {
+      const response = await fetch(getImageUrl(currentImage.image_url));
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = currentImage.image_name || `image-${currentIndex + 1}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Download failed:', error);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm">
+      <div className="relative w-full h-full flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 bg-zinc-900/50 border-b border-zinc-800">
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-semibold text-white">
+              {currentImage.image_name || `Image ${currentIndex + 1}`}
+            </h2>
+            <Badge variant="secondary" className="bg-zinc-800 text-zinc-300">
+              {currentIndex + 1} of {images.length}
+            </Badge>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowDetails(!showDetails)}
+              className="text-zinc-300 hover:text-white hover:bg-zinc-800"
+            >
+              <Info className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDownload}
+              className="text-zinc-300 hover:text-white hover:bg-zinc-800"
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="text-zinc-300 hover:text-white hover:bg-zinc-800"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 flex">
+          {/* Image Area */}
+          <div className="flex-1 relative overflow-hidden">
+            {/* Navigation Buttons */}
+            {images.length > 1 && (
+              <>
+                <Button
+                  variant="ghost"
+                  onClick={prevImage}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white border-zinc-700 cursor-pointer"
+                >
+                  <ChevronLeft className="h-6 w-6 text-white" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={nextImage}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white border-zinc-700 cursor-pointer"
+                >
+                  <ChevronRight className="h-6 w-6 text-white" />
+                </Button>
+              </>
+            )}
+
+            {/* Image Container */}
+            <div className="w-full h-full flex items-center justify-center p-8">
+              <div 
+                className="relative max-w-full max-h-full transition-transform duration-200"
+                style={{ 
+                  transform: `scale(${zoom}) rotate(${rotation}deg)`,
+                  transformOrigin: 'center'
+                }}
+              >
+                {imageLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-zinc-900/50 rounded-lg">
+                    <Skeleton className="w-96 h-96 bg-zinc-800" />
+                  </div>
+                )}
+                <img
+                  src={getImageUrl(currentImage.image_url)}
+                  alt={currentImage.image_name || `Image ${currentIndex + 1}`}
+                  className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                  onLoad={() => setImageLoading(false)}
+                  onError={() => setImageLoading(false)}
+                  style={{ 
+                    display: imageLoading ? 'none' : 'block'
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Control Bar */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-lg p-2 border border-zinc-700">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleZoomOut}
+                className="text-zinc-300 hover:text-white hover:bg-zinc-800"
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <span className="text-sm text-zinc-300 px-2 min-w-[60px] text-center">
+                {Math.round(zoom * 100)}%
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleZoomIn}
+                className="text-zinc-300 hover:text-white hover:bg-zinc-800"
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+              <div className="w-px h-6 bg-zinc-600 mx-1" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRotate}
+                className="text-zinc-300 hover:text-white hover:bg-zinc-800"
+              >
+                <RotateCw className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Details Panel */}
+          {showDetails && (
+            <div className="w-96 bg-zinc-900/50 border-l border-zinc-800 p-4 overflow-y-auto">
+              <Card className="bg-zinc-950/50 border-zinc-800">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg text-white">Image Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-zinc-400 mb-2">Basic Info</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-zinc-500">Name:</span>
+                        <span className="text-zinc-300">{currentImage.image_name || 'Unnamed'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-zinc-500">ID:</span>
+                        <span className="text-zinc-300 font-mono text-xs">{currentImage.image_id.substring(0, 8)}...</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {currentImage.scanningProperties && (
+                    <div>
+                      <h4 className="text-sm font-medium text-zinc-400 mb-2">Scanning Properties</h4>
+                      <div className="space-y-2 text-sm">
+                        {currentImage.scanningProperties.scan_id && (
+                          <div className="flex justify-between">
+                            <span className="text-zinc-500">Scan ID:</span>
+                            <span className="text-zinc-300">{currentImage.scanningProperties.scan_id.substring(0, 8)}...</span>
+                          </div>
+                        )}
+                        {currentImage.scanningProperties.resolution_dpi && (
+                          <div className="flex justify-between">
+                            <span className="text-zinc-500">Resolution:</span>
+                            <span className="text-zinc-300">{currentImage.scanningProperties.resolution_dpi}</span>
+                          </div>
+                        )}
+                        {currentImage.scanningProperties.file_format && (
+                          <div className="flex justify-between">
+                            <span className="text-zinc-500">Format:</span>
+                            <span className="text-zinc-300">{currentImage.scanningProperties.file_format}</span>
+                          </div>
+                        )}
+                        {currentImage.scanningProperties.horizontal_or_vertical_scan && (
+                          <div className="flex justify-between">
+                            <span className="text-zinc-500">Scan Type:</span>
+                            <span className="text-zinc-300">{currentImage.scanningProperties.horizontal_or_vertical_scan}</span>
+                          </div>
+                        )}
+                        {currentImage.scanningProperties.worked_by && (
+                          <div className="flex justify-between">
+                            <span className="text-zinc-500">Worked By:</span>
+                            <span className="text-zinc-300">{currentImage.scanningProperties.worked_by}</span>
+                          </div>
+                        )}
+                        {currentImage.scanningProperties.scanner_model && (
+                          <div className="flex justify-between">
+                            <span className="text-zinc-500">Scanner model:</span>
+                            <span className="text-zinc-300">{currentImage.scanningProperties.scanner_model}</span>
+                          </div>
+                        )}
+                        {currentImage.scanningProperties.color_depth && (
+                          <div className="flex justify-between">
+                            <span className="text-zinc-500">Color Depth:</span>
+                            <span className="text-zinc-300">{currentImage.scanningProperties.color_depth}</span>
+                          </div>
+                        )}
+                        {currentImage.scanningProperties.lighting_conditions && (
+                          <div className="flex justify-between">
+                            <span className="text-zinc-500">Lighting Condition:</span>
+                            <span className="text-zinc-300">{currentImage.scanningProperties.lighting_conditions}</span>
+                          </div>
+                        )}
+                        {currentImage.scanningProperties.scanning_start_date && (
+                          <div className="flex justify-between">
+                            <span className="text-zinc-500">Scanning Start Date:</span>
+                            <span className="text-zinc-300">{currentImage.scanningProperties.scanning_start_date}</span>
+                          </div>
+                        )}
+                        {currentImage.scanningProperties.scanning_completed_date && (
+                          <div className="flex justify-between">
+                            <span className="text-zinc-500">Scanning Completed Date:</span>
+                            <span className="text-zinc-300">{currentImage.scanningProperties.scanning_completed_date}</span>
+                          </div>
+                        )}
+                        {currentImage.scanningProperties.post_scanning_completed_date && (
+                          <div className="flex justify-between">
+                            <span className="text-zinc-500">Post Scanning Completed Date:</span>
+                            <span className="text-zinc-300">{currentImage.scanningProperties.post_scanning_completed_date}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
+
+        {/* Thumbnail Strip */}
+        {images.length > 1 && (
+          <div className="border-t border-zinc-800 bg-zinc-900/50 p-4">
+            <div className="flex gap-2 overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-zinc-900">
+              {images.map((image, index) => (
+                <div
+                  key={image.image_id}
+                  onClick={() => {
+                    setCurrentIndex(index);
+                    setZoom(1);
+                    setRotation(0);
+                    setImageLoading(true);
+                  }}
+                  className={`relative w-16 h-16 rounded-md overflow-hidden cursor-pointer flex-shrink-0 transition-all ${
+                    currentIndex === index 
+                      ? "ring-2 ring-white" 
+                      : "opacity-70 hover:opacity-100"
+                  }`}
+                >
+                  <div 
+                    className="w-full h-full bg-cover bg-center"
+                    style={{ 
+                      backgroundImage: `url('${getImageUrl(image.image_url)}')`,
+                      backgroundPosition: 'center',
+                      backgroundSize: 'cover' 
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function GranthaViewPage({ params }: PageParams) {
   const granthaId = params.id;
   const router = useRouter();
   const { data: session } = useSession();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["grantha-view", granthaId],
@@ -219,6 +571,11 @@ export default function GranthaViewPage({ params }: PageParams) {
     return `/api/images?path=${encodeURIComponent(imagePath)}`;
   };
 
+  const openModal = (index: number) => {
+    setActiveImageIndex(index);
+    setIsModalOpen(true);
+  };
+
   return (
     <div className="container mx-auto py-6 px-4 max-w-6xl">
       <div className="space-y-6">
@@ -331,15 +688,21 @@ export default function GranthaViewPage({ params }: PageParams) {
                   <CardTitle className="text-lg text-gray-200">Images</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="relative aspect-square overflow-hidden rounded-md mb-3">
+                  <div 
+                    className="relative aspect-square overflow-hidden rounded-md mb-3 cursor-pointer group"
+                    onClick={() => openModal(activeImageIndex)}
+                  >
                     <div 
-                      className="w-full h-full bg-cover bg-center"
+                      className="w-full h-full bg-cover bg-center transition-transform group-hover:scale-105"
                       style={{ 
                         backgroundImage: `url('${getImageUrl(grantha.scannedImages![activeImageIndex].image_url)}')`,
                         backgroundPosition: 'center',
                         backgroundSize: 'cover' 
                       }}
-                    ></div>
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                      <Eye className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
                   </div>
 
                   {hasImages && grantha.scannedImages!.length > 1 && (
@@ -359,7 +722,7 @@ export default function GranthaViewPage({ params }: PageParams) {
                               backgroundPosition: 'center',
                               backgroundSize: 'cover' 
                             }}
-                          ></div>
+                          />
                         </div>
                       ))}
                     </div>
@@ -405,6 +768,16 @@ export default function GranthaViewPage({ params }: PageParams) {
           </div>
         </div>
       </div>
+
+      {/* Image Modal */}
+      {hasImages && (
+        <ImageModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          images={grantha.scannedImages!}
+          initialIndex={activeImageIndex}
+        />
+      )}
     </div>
   );
 }
