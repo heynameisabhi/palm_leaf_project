@@ -22,6 +22,7 @@ import {
   CircuitBoard,
 } from "lucide-react";
 import axios from "axios";
+import Link from "next/link";
 
 // Type definitions
 interface Author {
@@ -160,11 +161,19 @@ export default function SearchPage(): JSX.Element {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white mb-1">
-                  {deck.grantha_deck_name || "Unnamed Deck"}
+                  <Link
+                    href={`/dashboard/data/view/view-grantha-deck/${deck.grantha_deck_id}`}
+                  >
+                    {deck.grantha_deck_name || "Unnamed Deck"}
+                  </Link>
                 </h3>
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-1 text-xs font-mono bg-black text-green-500 rounded-md border border-green-900/50">
-                    ID: {deck.grantha_deck_id}
+                    <Link
+                      href={`/dashboard/data/view/view-grantha-deck/${deck.grantha_deck_id}`}
+                    >
+                      ID: {deck.grantha_deck_id}
+                    </Link>
                   </span>
                 </div>
               </div>
@@ -245,7 +254,11 @@ export default function SearchPage(): JSX.Element {
                 >
                   <div>
                     <h5 className="font-medium text-green-500 text-base mb-2">
-                      {grantha.grantha_name || "Unnamed Grantha"}
+                      <Link
+                        href={`/dashboard/data/view/view-grantha/${grantha.grantha_id}`}
+                      >
+                        {grantha.grantha_name || "Unnamed Grantha"}
+                      </Link>
                     </h5>
                     <div className="flex flex-wrap gap-2">
                       {grantha.author && (
@@ -293,11 +306,19 @@ export default function SearchPage(): JSX.Element {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white mb-1">
-                  {grantha.grantha_name || "Unnamed Grantha"}
+                  <Link
+                    href={`/dashboard/data/view/view-grantha/${grantha.grantha_id}`}
+                  >
+                    {grantha.grantha_name || "Unnamed Grantha"}
+                  </Link>
                 </h3>
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-1 text-xs font-mono bg-black text-green-500 rounded-md border border-green-900/50">
-                    ID: {grantha.grantha_id}
+                    <Link
+                      href={`/dashboard/data/view/view-grantha/${grantha.grantha_id}`}
+                    >
+                      ID: {grantha.grantha_id}
+                    </Link>
                   </span>
                 </div>
               </div>
@@ -547,13 +568,13 @@ export default function SearchPage(): JSX.Element {
             <div className="flex flex-wrap gap-2">
               {[
                 "Find manuscripts by author Raghavan",
-                "Show manuscripts with stitch type as just non-stitch",
+                "Show manuscripts where stitch type is exactly 'stitch'",
                 "Large manuscripts over length 50cm",
                 "Show manuscripts between width 3cm-4cm",
                 "Sanskrit manuscripts",
                 "Manuscripts in bad condition",
                 "Show all manuscripts",
-                "Show all grantha decks inserted by the user with user_name test"
+                "Show all grantha decks inserted by the user with user_name test",
               ].map((example: string) => (
                 <button
                   key={example}

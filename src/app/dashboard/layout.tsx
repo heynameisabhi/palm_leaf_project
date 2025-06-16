@@ -1,22 +1,40 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Users, UserPlus, Database, DatabaseZap, FileSpreadsheet, ChevronRight, LayoutDashboard, BookOpen } from "lucide-react"
-import { usePathname } from "next/navigation"
-import Link from "next/link"
-import { cn } from "@/lib/utils"
+import { useState } from "react";
+import {
+  Users,
+  UserPlus,
+  Database,
+  DatabaseZap,
+  FileSpreadsheet,
+  ChevronRight,
+  LayoutDashboard,
+  BookOpen,
+  FileSearch,
+  BrainCircuit,
+  Search,
+  Brain,
+  BrainCog,
+} from "lucide-react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export default function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
-  const [userManagementOpen, setUserManagementOpen] = useState(false)
-  const [dataManagementOpen, setDataManagementOpen] = useState(false)
+  const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
+
+  // currently not required
+  // const [userManagementOpen, setUserManagementOpen] = useState(false)
+
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [dataManagementOpen, setDataManagementOpen] = useState(false);
 
   return (
     <div className="flex h-[calc(100vh-64px)] bg-black/50 mt-[64px]">
@@ -24,7 +42,7 @@ export default function DashboardLayout({
       <div
         className={cn(
           "h-[calc(100vh-64px)] bg-black flex flex-col border-r border-zinc-800 transition-[width] duration-300 fixed",
-          collapsed ? "w-[80px]" : "w-[300px]",
+          collapsed ? "w-[80px]" : "w-[300px]"
         )}
       >
         {/* Logo area */}
@@ -51,7 +69,7 @@ export default function DashboardLayout({
                 "hover:bg-gradient-to-r hover:from-emerald-900/50 hover:to-green-900/30",
                 dataManagementOpen
                   ? "bg-gradient-to-r from-emerald-900/50 to-green-900/30 text-white"
-                  : "text-zinc-400",
+                  : "text-zinc-400"
               )}
             >
               <Database className="w-5 h-5 text-emerald-500" />
@@ -59,7 +77,10 @@ export default function DashboardLayout({
                 <>
                   <span className="flex-1 text-left ml-3">Data Management</span>
                   <ChevronRight
-                    className={cn("w-4 h-4 transition-transform", dataManagementOpen ? "rotate-90" : "")}
+                    className={cn(
+                      "w-4 h-4 transition-transform",
+                      dataManagementOpen ? "rotate-90" : ""
+                    )}
                   />
                 </>
               )}
@@ -74,7 +95,7 @@ export default function DashboardLayout({
                     "flex items-center px-2 py-2 text-sm rounded-md transition-colors",
                     pathname === "/dashboard/data/insert"
                       ? "bg-zinc-800 text-emerald-400"
-                      : "text-zinc-400 hover:bg-zinc-800 hover:text-white",
+                      : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
                   )}
                 >
                   <Database className="w-4 h-4 mr-3" />
@@ -86,7 +107,7 @@ export default function DashboardLayout({
                     "flex items-center px-2 py-2 text-sm rounded-md transition-colors",
                     pathname === "/dashboard/data/insert/bulk-insertion"
                       ? "bg-zinc-800 text-emerald-400"
-                      : "text-zinc-400 hover:bg-zinc-800 hover:text-white",
+                      : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
                   )}
                 >
                   <DatabaseZap className="w-4 h-4 mr-3" />
@@ -98,7 +119,7 @@ export default function DashboardLayout({
                     "flex items-center px-2 py-2 text-sm rounded-md transition-colors",
                     pathname === "/dashboard/data/insert/author"
                       ? "bg-zinc-800 text-emerald-400"
-                      : "text-zinc-400 hover:bg-zinc-800 hover:text-white",
+                      : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
                   )}
                 >
                   <BookOpen className="w-4 h-4 mr-3" />
@@ -110,11 +131,68 @@ export default function DashboardLayout({
                     "flex items-center px-2 py-2 text-sm rounded-md transition-colors",
                     pathname === "/dashboard/data/view"
                       ? "bg-zinc-800 text-emerald-400"
-                      : "text-zinc-400 hover:bg-zinc-800 hover:text-white",
+                      : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
                   )}
                 >
                   <FileSpreadsheet className="w-4 h-4 mr-3" />
                   <span>View Data</span>
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Search */}
+          <div className="mt-2">
+            <button
+              onClick={() => setSearchOpen(!searchOpen)}
+              className={cn(
+                "flex items-center justify-center w-full px-2 py-2 text-sm rounded-md transition-colors",
+                "hover:bg-gradient-to-r hover:from-purple-900/50 hover:to-violet-900/30",
+                searchOpen
+                  ? "bg-gradient-to-r from-purple-900/50 to-violet-900/30 text-white"
+                  : "text-zinc-400"
+              )}
+            >
+              <Search className="w-5 h-5 text-purple-500" />
+              {!collapsed && (
+                <>
+                  <span className="flex-1 text-left ml-3">Search</span>
+                  <ChevronRight
+                    className={cn(
+                      "w-4 h-4 transition-transform",
+                      searchOpen ? "rotate-90" : ""
+                    )}
+                  />
+                </>
+              )}
+            </button>
+
+            {/* Search Submenu */}
+            {searchOpen && !collapsed && (
+              <div className="ml-6 mt-1 space-y-1">
+                <Link
+                  href="/dashboard/data/search/ai"
+                  className={cn(
+                    "flex items-center px-2 py-2 text-sm rounded-md transition-colors",
+                    pathname === "/dashboard/data/search/ai"
+                      ? "bg-zinc-800 text-purple-400"
+                      : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                  )}
+                >
+                  <Brain className="w-4 h-4 mr-3" />
+                  <span>AI Search</span>
+                </Link>
+                <Link
+                  href="/dashboard/data/search/manual"
+                  className={cn(
+                    "flex items-center px-2 py-2 text-sm rounded-md transition-colors",
+                    pathname === "/dashboard/data/search/manual"
+                      ? "bg-zinc-800 text-purple-400"
+                      : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                  )}
+                >
+                  <FileSearch className="w-4 h-4 mr-3" />
+                  <span>Manual Search</span>
                 </Link>
               </div>
             )}
@@ -149,5 +227,5 @@ export default function DashboardLayout({
         <div className="h-full w-full">{children}</div>
       </main>
     </div>
-  )
+  );
 }

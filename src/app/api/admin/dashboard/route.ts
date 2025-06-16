@@ -96,7 +96,7 @@ export async function GET() {
                     where: {
                         status: "ACTIVE",
                         role: {
-                            not: "ADMIN"
+                            not: "admin"
                         }
                     }
                 });
@@ -105,7 +105,7 @@ export async function GET() {
                     where: {
                         status: "BLOCKED",
                         role: {
-                            not: "ADMIN"
+                            not: "admin"
                         }
                     }
                 });

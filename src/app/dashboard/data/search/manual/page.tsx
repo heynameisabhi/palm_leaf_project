@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect, useCallback } from "react"
+import type React from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Search,
   Filter,
@@ -19,207 +19,213 @@ import {
   AlertCircle,
   Sparkles,
   Settings,
-} from "lucide-react"
+} from "lucide-react";
+import Link from "next/link";
 
 interface SearchFilters {
-  deckName?: string
-  ownerName?: string
-  lengthMin?: number
-  lengthMax?: number
-  widthMin?: number
-  widthMax?: number
-  stitchType?: string
-  physicalCondition?: string
-  authorName?: string
-  granthaName?: string
-  languageName?: string
-  workedBy?: string
-  searchType: "deck" | "grantha" | "combined"
+  deckName?: string;
+  ownerName?: string;
+  lengthMin?: number;
+  lengthMax?: number;
+  widthMin?: number;
+  widthMax?: number;
+  stitchType?: string;
+  physicalCondition?: string;
+  authorName?: string;
+  granthaName?: string;
+  languageName?: string;
+  workedBy?: string;
+  searchType: "deck" | "grantha" | "combined";
 }
 
 interface Author {
-  author_name?: string
-  scribe_name?: string
+  author_name?: string;
+  scribe_name?: string;
 }
 
 interface Language {
-  language_name?: string
+  language_name?: string;
 }
 
 interface ScanningProperties {
-  worked_by?: string
+  worked_by?: string;
 }
 
 interface ScannedImage {
-  image_id: string
-  image_name: string
-  scanningProperties?: ScanningProperties
+  image_id: string;
+  image_name: string;
+  scanningProperties?: ScanningProperties;
 }
 
 interface GranthaDeck {
-  grantha_deck_id: string
-  grantha_deck_name?: string
-  grantha_owner_name?: string
-  length_in_cms?: number
-  width_in_cms?: number
-  stitch_or_nonstitch?: string
-  physical_condition?: string
-  total_leaves?: number
-  total_images?: number
-  user?: any
+  grantha_deck_id: string;
+  grantha_deck_name?: string;
+  grantha_owner_name?: string;
+  length_in_cms?: number;
+  width_in_cms?: number;
+  stitch_or_nonstitch?: string;
+  physical_condition?: string;
+  total_leaves?: number;
+  total_images?: number;
+  user?: any;
 }
 
 interface Grantha {
-  grantha_id: string
-  grantha_name?: string
-  description?: string
-  remarks?: string
-  author?: Author
-  language?: Language
-  scannedImages?: ScannedImage[]
-  granthaDeck?: GranthaDeck
+  grantha_id: string;
+  grantha_name?: string;
+  description?: string;
+  remarks?: string;
+  author?: Author;
+  language?: Language;
+  scannedImages?: ScannedImage[];
+  granthaDeck?: GranthaDeck;
 }
 
 interface SearchResult {
-  type: "deck" | "grantha"
-  grantha_deck_id?: string
-  grantha_deck_name?: string
-  grantha_owner_name?: string
-  length_in_cms?: number
-  width_in_cms?: number
-  stitch_or_nonstitch?: string
-  physical_condition?: string
-  total_leaves?: number
-  total_images?: number
-  granthas?: Grantha[]
-  user?: any
-  grantha_id?: string
-  grantha_name?: string
-  description?: string
-  remarks?: string
-  author?: Author
-  language?: Language
-  scannedImages?: ScannedImage[]
-  granthaDeck?: GranthaDeck
+  type: "deck" | "grantha";
+  grantha_deck_id?: string;
+  grantha_deck_name?: string;
+  grantha_owner_name?: string;
+  length_in_cms?: number;
+  width_in_cms?: number;
+  stitch_or_nonstitch?: string;
+  physical_condition?: string;
+  total_leaves?: number;
+  total_images?: number;
+  granthas?: Grantha[];
+  user?: any;
+  grantha_id?: string;
+  grantha_name?: string;
+  description?: string;
+  remarks?: string;
+  author?: Author;
+  language?: Language;
+  scannedImages?: ScannedImage[];
+  granthaDeck?: GranthaDeck;
 }
 
 interface SearchResponse {
-  query: string
-  results: SearchResult[]
-  count: number
-  filters: SearchFilters
-  fallback?: boolean
-  error?: string
+  query: string;
+  results: SearchResult[];
+  count: number;
+  filters: SearchFilters;
+  fallback?: boolean;
+  error?: string;
 }
 
 function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedValue(value)
-    }, delay)
+      setDebouncedValue(value);
+    }, delay);
 
     return () => {
-      clearTimeout(handler)
-    }
-  }, [value, delay])
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
 
-  return debouncedValue
+  return debouncedValue;
 }
 
 const ManualManuscriptSearch: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState("")
+  const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<SearchFilters>({
     searchType: "deck",
-  })
-  const [results, setResults] = useState<SearchResult[]>([])
-  const [loading, setLoading] = useState(false)
-  const [showFilters, setShowFilters] = useState(false)
-  const [totalCount, setTotalCount] = useState(0)
-  const [error, setError] = useState<string | null>(null)
+  });
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   // Debounced search query
-  const debouncedSearchQuery = useDebounce(searchQuery, 500)
-  const debouncedFilters = useDebounce(filters, 300)
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const debouncedFilters = useDebounce(filters, 300);
 
   // Perform search
-  const performSearch = useCallback(async (query: string, searchFilters: SearchFilters) => {
-    if (!query.trim() && Object.keys(searchFilters).length <= 1) {
-      setResults([])
-      setTotalCount(0)
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      // Construct query for manual search
-      const searchParams = new URLSearchParams()
-
-      // Add main query
-      if (query.trim()) {
-        searchParams.append("q", query)
+  const performSearch = useCallback(
+    async (query: string, searchFilters: SearchFilters) => {
+      if (!query.trim() && Object.keys(searchFilters).length <= 1) {
+        setResults([]);
+        setTotalCount(0);
+        return;
       }
 
-      // Add filters
-      Object.entries(searchFilters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
-          searchParams.append(key, value.toString())
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Construct query for manual search
+        const searchParams = new URLSearchParams();
+
+        // Add main query
+        if (query.trim()) {
+          searchParams.append("q", query);
         }
-      })
 
-      const response = await fetch(`/api/search?${searchParams.toString()}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
+        // Add filters
+        Object.entries(searchFilters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== "") {
+            searchParams.append(key, value.toString());
+          }
+        });
 
-      if (!response.ok) {
-        throw new Error(`Search failed: ${response.statusText}`)
+        const response = await fetch(`/api/search?${searchParams.toString()}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Search failed: ${response.statusText}`);
+        }
+
+        const data: SearchResponse = await response.json();
+        setResults(data.results);
+        setTotalCount(data.count);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "An error occurred during search"
+        );
+        setResults([]);
+        setTotalCount(0);
+      } finally {
+        setLoading(false);
       }
-
-      const data: SearchResponse = await response.json()
-      setResults(data.results)
-      setTotalCount(data.count)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred during search")
-      setResults([])
-      setTotalCount(0)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+    },
+    []
+  );
 
   // Trigger search when debounced values change
   useEffect(() => {
-    performSearch(debouncedSearchQuery, debouncedFilters)
-  }, [debouncedSearchQuery, debouncedFilters, performSearch])
+    performSearch(debouncedSearchQuery, debouncedFilters);
+  }, [debouncedSearchQuery, debouncedFilters, performSearch]);
 
   // Update filter
   const updateFilter = (key: keyof SearchFilters, value: any) => {
     setFilters((prev) => ({
       ...prev,
       [key]: value,
-    }))
-  }
+    }));
+  };
 
   // Clear all filters
   const clearFilters = () => {
-    setFilters({ searchType: "deck" })
-    setSearchQuery("")
-  }
+    setFilters({ searchType: "deck" });
+    setSearchQuery("");
+  };
 
   // Clear individual filter
   const clearFilter = (key: keyof SearchFilters) => {
     setFilters((prev) => {
-      const newFilters = { ...prev }
-      delete newFilters[key]
-      return newFilters
-    })
-  }
+      const newFilters = { ...prev };
+      delete newFilters[key];
+      return newFilters;
+    });
+  };
 
   // Active filters count
   const activeFiltersCount = Object.keys(filters).filter(
@@ -227,15 +233,15 @@ const ManualManuscriptSearch: React.FC = () => {
       key !== "searchType" &&
       filters[key as keyof SearchFilters] !== undefined &&
       filters[key as keyof SearchFilters] !== null &&
-      filters[key as keyof SearchFilters] !== "",
-  ).length
+      filters[key as keyof SearchFilters] !== ""
+  ).length;
 
   const formatDimensions = (length?: number, width?: number): string => {
-    if (!length && !width) return "N/A"
-    if (!length) return `Width: ${width} cm`
-    if (!width) return `Length: ${length} cm`
-    return `${length} × ${width} cm`
-  }
+    if (!length && !width) return "N/A";
+    if (!length) return `Width: ${width} cm`;
+    if (!width) return `Length: ${length} cm`;
+    return `${length} × ${width} cm`;
+  };
 
   const renderDeckResult = (deck: SearchResult): React.ReactElement => (
     <div
@@ -253,10 +259,16 @@ const ManualManuscriptSearch: React.FC = () => {
                 <Book className="w-6 h-6 text-green-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white mb-1">{deck.grantha_deck_name || "Unnamed Deck"}</h3>
+                <h3 className="text-xl font-bold text-white mb-1">
+                  {deck.grantha_deck_name || "Unnamed Deck"}
+                </h3>
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-1 text-xs font-mono bg-black text-green-500 rounded-md border border-green-900/50">
-                    ID: {deck.grantha_deck_id}
+                    <Link
+                      href={`/dashboard/data/view/view-grantha-deck/${deck.grantha_deck_id}`}
+                    >
+                      ID: {deck.grantha_deck_id}
+                    </Link>
                   </span>
                   {deck.user && (
                     <span className="px-2 py-1 text-xs bg-blue-950/30 text-blue-400 rounded-md border border-blue-900/50">
@@ -310,9 +322,13 @@ const ManualManuscriptSearch: React.FC = () => {
                 <div className="p-1.5 bg-gradient-to-r from-green-950 to-green-800 rounded-lg">
                   <item.icon className="w-3.5 h-3.5 text-green-400" />
                 </div>
-                <span className="text-sm font-medium text-zinc-400">{item.label}</span>
+                <span className="text-sm font-medium text-zinc-400">
+                  {item.label}
+                </span>
               </div>
-              <span className="text-sm font-medium text-white truncate max-w-[120px]">{item.value}</span>
+              <span className="text-sm font-medium text-white truncate max-w-[120px]">
+                {item.value}
+              </span>
             </div>
           ))}
         </div>
@@ -355,9 +371,15 @@ const ManualManuscriptSearch: React.FC = () => {
                       )}
                     </div>
                     {grantha.description && (
-                      <p className="text-sm text-zinc-400 mt-2 leading-relaxed">{grantha.description}</p>
+                      <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
+                        {grantha.description}
+                      </p>
                     )}
-                    {grantha.remarks && <p className="text-sm text-zinc-500 mt-1 italic">Remarks: {grantha.remarks}</p>}
+                    {grantha.remarks && (
+                      <p className="text-sm text-zinc-500 mt-1 italic">
+                        Remarks: {grantha.remarks}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -366,7 +388,7 @@ const ManualManuscriptSearch: React.FC = () => {
         )}
       </div>
     </div>
-  )
+  );
 
   const renderGranthaResult = (grantha: SearchResult): React.ReactElement => (
     <div
@@ -384,10 +406,20 @@ const ManualManuscriptSearch: React.FC = () => {
                 <FileText className="w-6 h-6 text-green-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white mb-1">{grantha.grantha_name || "Unnamed Grantha"}</h3>
+                <h3 className="text-xl font-bold text-white mb-1">
+                  <Link
+                    href={`/dashboard/data/view/view-grantha/${grantha.grantha_id}`}
+                  >
+                    {grantha.grantha_name || "Unnamed Grantha"}
+                  </Link>
+                </h3>
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-1 text-xs font-mono bg-black text-green-500 rounded-md border border-green-900/50">
-                    ID: {grantha.grantha_id}
+                    <Link
+                      href={`/dashboard/data/view/view-grantha/${grantha.grantha_id}`}
+                    >
+                      ID: {grantha.grantha_id}
+                    </Link>
                   </span>
                 </div>
               </div>
@@ -429,24 +461,36 @@ const ManualManuscriptSearch: React.FC = () => {
                   <div className="p-1.5 bg-gradient-to-r from-green-950 to-green-800 rounded-lg">
                     <item.icon className="w-3.5 h-3.5 text-green-400" />
                   </div>
-                  <span className="text-sm font-medium text-zinc-400">{item.label}</span>
+                  <span className="text-sm font-medium text-zinc-400">
+                    {item.label}
+                  </span>
                 </div>
-                <span className="text-sm font-medium text-white">{item.value}</span>
+                <span className="text-sm font-medium text-white">
+                  {item.value}
+                </span>
               </div>
             ))}
         </div>
 
         {grantha.description && (
           <div className="mb-6 p-4 rounded-xl bg-zinc-900 border border-zinc-800">
-            <h4 className="text-sm font-semibold text-green-500 mb-2">Description</h4>
-            <p className="text-zinc-300 leading-relaxed">{grantha.description}</p>
+            <h4 className="text-sm font-semibold text-green-500 mb-2">
+              Description
+            </h4>
+            <p className="text-zinc-300 leading-relaxed">
+              {grantha.description}
+            </p>
           </div>
         )}
 
         {grantha.remarks && (
           <div className="mb-6 p-4 rounded-xl bg-zinc-900 border border-zinc-800">
-            <h4 className="text-sm font-semibold text-green-500 mb-2">Remarks</h4>
-            <p className="text-zinc-300 leading-relaxed italic">{grantha.remarks}</p>
+            <h4 className="text-sm font-semibold text-green-500 mb-2">
+              Remarks
+            </h4>
+            <p className="text-zinc-300 leading-relaxed italic">
+              {grantha.remarks}
+            </p>
           </div>
         )}
 
@@ -456,7 +500,9 @@ const ManualManuscriptSearch: React.FC = () => {
               <div className="p-1.5 bg-gradient-to-r from-green-950 to-green-800 rounded-lg">
                 <Book className="w-4 h-4 text-green-400" />
               </div>
-              <h4 className="text-base font-semibold text-white">Deck Information</h4>
+              <h4 className="text-base font-semibold text-white">
+                Deck Information
+              </h4>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {[
@@ -470,7 +516,10 @@ const ManualManuscriptSearch: React.FC = () => {
                 },
                 {
                   label: "Dimensions",
-                  value: formatDimensions(grantha.granthaDeck.length_in_cms, grantha.granthaDeck.width_in_cms),
+                  value: formatDimensions(
+                    grantha.granthaDeck.length_in_cms,
+                    grantha.granthaDeck.width_in_cms
+                  ),
                 },
                 {
                   label: "Condition",
@@ -492,7 +541,9 @@ const ManualManuscriptSearch: React.FC = () => {
                     className="flex justify-between items-center p-3 rounded-xl bg-zinc-900 border border-zinc-800"
                   >
                     <span className="text-sm text-zinc-400">{item.label}:</span>
-                    <span className="text-sm font-medium text-green-500">{item.value}</span>
+                    <span className="text-sm font-medium text-green-500">
+                      {item.value}
+                    </span>
                   </div>
                 ))}
             </div>
@@ -518,7 +569,9 @@ const ManualManuscriptSearch: React.FC = () => {
                   key={image.image_id}
                   className="flex items-center justify-between p-3 rounded-xl bg-zinc-900 border border-zinc-800"
                 >
-                  <span className="text-sm font-medium text-green-500 truncate">{image.image_name}</span>
+                  <span className="text-sm font-medium text-green-500 truncate">
+                    {image.image_name}
+                  </span>
                   {image.scanningProperties?.worked_by && (
                     <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-black text-zinc-400 rounded-md border border-zinc-800 ml-2">
                       <UserCheck className="w-3 h-3" />
@@ -537,7 +590,7 @@ const ManualManuscriptSearch: React.FC = () => {
         )}
       </div>
     </div>
-  )
+  );
 
   return (
     <div className="min-h-screen bg-black relative">
@@ -558,7 +611,8 @@ const ManualManuscriptSearch: React.FC = () => {
             </div>
 
             <p className="text-xl text-zinc-400 max-w-3xl mx-auto">
-              Search through our collection of palm leaf manuscripts using advanced filters and precise criteria
+              Search through our collection of palm leaf manuscripts using
+              advanced filters and precise criteria
             </p>
           </div>
 
@@ -570,8 +624,12 @@ const ManualManuscriptSearch: React.FC = () => {
                   <Search className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">Advanced Manuscript Search</h2>
-                  <p className="text-zinc-400">Use filters and search terms to find specific manuscripts</p>
+                  <h2 className="text-xl font-bold text-white">
+                    Advanced Manuscript Search
+                  </h2>
+                  <p className="text-zinc-400">
+                    Use filters and search terms to find specific manuscripts
+                  </p>
                 </div>
               </div>
 
@@ -618,7 +676,9 @@ const ManualManuscriptSearch: React.FC = () => {
                   <div className="p-1.5 bg-gradient-to-r from-green-950 to-green-800 rounded-lg">
                     <Filter className="h-4 w-4 text-green-400" />
                   </div>
-                  <span className="text-white font-medium">Advanced Filters</span>
+                  <span className="text-white font-medium">
+                    Advanced Filters
+                  </span>
                   {activeFiltersCount > 0 && (
                     <span className="bg-green-600 text-white px-2 py-1 rounded-full text-xs font-medium">
                       {activeFiltersCount}
@@ -653,7 +713,9 @@ const ManualManuscriptSearch: React.FC = () => {
             <div className="max-w-4xl mx-auto mb-12">
               <div className="bg-black rounded-2xl border border-zinc-800 p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-bold text-white">Search Filters</h3>
+                  <h3 className="text-xl font-bold text-white">
+                    Search Filters
+                  </h3>
                   <button
                     onClick={clearFilters}
                     className="text-zinc-400 hover:text-white transition-colors duration-300 px-3 py-1 rounded-lg hover:bg-zinc-800"
@@ -665,7 +727,9 @@ const ManualManuscriptSearch: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {/* Deck Name */}
                   <div>
-                    <label className="block text-sm font-medium text-green-500 mb-2">Grantha Deck Name</label>
+                    <label className="block text-sm font-medium text-green-500 mb-2">
+                      Grantha Deck Name
+                    </label>
                     <input
                       type="text"
                       placeholder="Enter deck name"
@@ -677,55 +741,73 @@ const ManualManuscriptSearch: React.FC = () => {
 
                   {/* Owner Name */}
                   <div>
-                    <label className="block text-sm font-medium text-green-500 mb-2">Owner Name</label>
+                    <label className="block text-sm font-medium text-green-500 mb-2">
+                      Owner Name
+                    </label>
                     <input
                       type="text"
                       placeholder="Enter owner name"
                       value={filters.ownerName || ""}
-                      onChange={(e) => updateFilter("ownerName", e.target.value)}
+                      onChange={(e) =>
+                        updateFilter("ownerName", e.target.value)
+                      }
                       className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700 transition-all duration-300"
                     />
                   </div>
 
                   {/* Author Name */}
                   <div>
-                    <label className="block text-sm font-medium text-green-500 mb-2">Author Name</label>
+                    <label className="block text-sm font-medium text-green-500 mb-2">
+                      Author Name
+                    </label>
                     <input
                       type="text"
                       placeholder="Enter author name"
                       value={filters.authorName || ""}
-                      onChange={(e) => updateFilter("authorName", e.target.value)}
+                      onChange={(e) =>
+                        updateFilter("authorName", e.target.value)
+                      }
                       className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700 transition-all duration-300"
                     />
                   </div>
 
                   {/* Grantha Name */}
                   <div>
-                    <label className="block text-sm font-medium text-green-500 mb-2">Grantha Name</label>
+                    <label className="block text-sm font-medium text-green-500 mb-2">
+                      Grantha Name
+                    </label>
                     <input
                       type="text"
                       placeholder="Enter manuscript name"
                       value={filters.granthaName || ""}
-                      onChange={(e) => updateFilter("granthaName", e.target.value)}
+                      onChange={(e) =>
+                        updateFilter("granthaName", e.target.value)
+                      }
                       className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700 transition-all duration-300"
                     />
                   </div>
 
                   {/* Language */}
                   <div>
-                    <label className="block text-sm font-medium text-green-500 mb-2">Language/Script</label>
+                    <label className="block text-sm font-medium text-green-500 mb-2">
+                      Language/Script
+                    </label>
                     <input
                       type="text"
                       placeholder="Enter language or script"
                       value={filters.languageName || ""}
-                      onChange={(e) => updateFilter("languageName", e.target.value)}
+                      onChange={(e) =>
+                        updateFilter("languageName", e.target.value)
+                      }
                       className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700 transition-all duration-300"
                     />
                   </div>
 
                   {/* Worked By */}
                   <div>
-                    <label className="block text-sm font-medium text-green-500 mb-2">Worked By</label>
+                    <label className="block text-sm font-medium text-green-500 mb-2">
+                      Worked By
+                    </label>
                     <input
                       type="text"
                       placeholder="Enter worker name"
@@ -737,10 +819,14 @@ const ManualManuscriptSearch: React.FC = () => {
 
                   {/* Physical Condition */}
                   <div>
-                    <label className="block text-sm font-medium text-green-500 mb-2">Physical Condition</label>
+                    <label className="block text-sm font-medium text-green-500 mb-2">
+                      Physical Condition
+                    </label>
                     <select
                       value={filters.physicalCondition || ""}
-                      onChange={(e) => updateFilter("physicalCondition", e.target.value)}
+                      onChange={(e) =>
+                        updateFilter("physicalCondition", e.target.value)
+                      }
                       className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700 transition-all duration-300"
                     >
                       <option value="">All Conditions</option>
@@ -756,10 +842,14 @@ const ManualManuscriptSearch: React.FC = () => {
 
                   {/* Stitch Type */}
                   <div>
-                    <label className="block text-sm font-medium text-green-500 mb-2">Stitch Type</label>
+                    <label className="block text-sm font-medium text-green-500 mb-2">
+                      Stitch Type
+                    </label>
                     <select
                       value={filters.stitchType || ""}
-                      onChange={(e) => updateFilter("stitchType", e.target.value)}
+                      onChange={(e) =>
+                        updateFilter("stitchType", e.target.value)
+                      }
                       className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700 transition-all duration-300"
                     >
                       <option value="">All Types</option>
@@ -770,14 +860,21 @@ const ManualManuscriptSearch: React.FC = () => {
 
                   {/* Length Range */}
                   <div>
-                    <label className="block text-sm font-medium text-green-500 mb-2">Length Range (cm)</label>
+                    <label className="block text-sm font-medium text-green-500 mb-2">
+                      Length Range (cm)
+                    </label>
                     <div className="flex space-x-2">
                       <input
                         type="number"
                         placeholder="Min"
                         value={filters.lengthMin || ""}
                         onChange={(e) =>
-                          updateFilter("lengthMin", e.target.value ? Number.parseFloat(e.target.value) : undefined)
+                          updateFilter(
+                            "lengthMin",
+                            e.target.value
+                              ? Number.parseFloat(e.target.value)
+                              : undefined
+                          )
                         }
                         className="w-1/2 px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700 transition-all duration-300"
                       />
@@ -786,7 +883,12 @@ const ManualManuscriptSearch: React.FC = () => {
                         placeholder="Max"
                         value={filters.lengthMax || ""}
                         onChange={(e) =>
-                          updateFilter("lengthMax", e.target.value ? Number.parseFloat(e.target.value) : undefined)
+                          updateFilter(
+                            "lengthMax",
+                            e.target.value
+                              ? Number.parseFloat(e.target.value)
+                              : undefined
+                          )
                         }
                         className="w-1/2 px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700 transition-all duration-300"
                       />
@@ -795,14 +897,21 @@ const ManualManuscriptSearch: React.FC = () => {
 
                   {/* Width Range */}
                   <div>
-                    <label className="block text-sm font-medium text-green-500 mb-2">Width Range (cm)</label>
+                    <label className="block text-sm font-medium text-green-500 mb-2">
+                      Width Range (cm)
+                    </label>
                     <div className="flex space-x-2">
                       <input
                         type="number"
                         placeholder="Min"
                         value={filters.widthMin || ""}
                         onChange={(e) =>
-                          updateFilter("widthMin", e.target.value ? Number.parseFloat(e.target.value) : undefined)
+                          updateFilter(
+                            "widthMin",
+                            e.target.value
+                              ? Number.parseFloat(e.target.value)
+                              : undefined
+                          )
                         }
                         className="w-1/2 px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700 transition-all duration-300"
                       />
@@ -811,7 +920,12 @@ const ManualManuscriptSearch: React.FC = () => {
                         placeholder="Max"
                         value={filters.widthMax || ""}
                         onChange={(e) =>
-                          updateFilter("widthMax", e.target.value ? Number.parseFloat(e.target.value) : undefined)
+                          updateFilter(
+                            "widthMax",
+                            e.target.value
+                              ? Number.parseFloat(e.target.value)
+                              : undefined
+                          )
                         }
                         className="w-1/2 px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700 transition-all duration-300"
                       />
@@ -828,7 +942,7 @@ const ManualManuscriptSearch: React.FC = () => {
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {Object.entries(filters).map(([key, value]) => {
-                        if (key === "searchType" || !value) return null
+                        if (key === "searchType" || !value) return null;
                         return (
                           <span
                             key={key}
@@ -836,13 +950,15 @@ const ManualManuscriptSearch: React.FC = () => {
                           >
                             {key}: {value.toString()}
                             <button
-                              onClick={() => clearFilter(key as keyof SearchFilters)}
+                              onClick={() =>
+                                clearFilter(key as keyof SearchFilters)
+                              }
                               className="ml-2 hover:text-green-300 transition-colors cursor-pointer duration-200"
                             >
                               <X className="h-3 w-3 text-white" />
                             </button>
                           </span>
-                        )
+                        );
                       })}
                     </div>
                   </div>
@@ -856,7 +972,9 @@ const ManualManuscriptSearch: React.FC = () => {
             <div className="flex items-center justify-center py-16">
               <div className="flex items-center gap-3">
                 <Loader2 className="w-8 h-8 animate-spin text-green-500" />
-                <span className="text-xl text-zinc-400">Searching manuscripts...</span>
+                <span className="text-xl text-zinc-400">
+                  Searching manuscripts...
+                </span>
               </div>
             </div>
           )}
@@ -870,28 +988,40 @@ const ManualManuscriptSearch: React.FC = () => {
                     <FileText className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white">Search Results</h2>
+                    <h2 className="text-xl font-bold text-white">
+                      Search Results
+                    </h2>
                     <p className="text-zinc-400">
                       Found {totalCount} result
-                      {totalCount !== 1 ? "s" : ""} {searchQuery && `for "${searchQuery}"`}
+                      {totalCount !== 1 ? "s" : ""}{" "}
+                      {searchQuery && `for "${searchQuery}"`}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {results.length === 0 && (searchQuery || activeFiltersCount > 0) ? (
+              {results.length === 0 &&
+              (searchQuery || activeFiltersCount > 0) ? (
                 <div className="text-center py-16 bg-black rounded-2xl border border-zinc-800">
                   <div className="inline-block mb-6 p-6 bg-gradient-to-r from-green-950 to-green-600 rounded-full">
                     <Book className="w-12 h-12 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">No manuscripts found</h3>
-                  <p className="text-zinc-400 text-lg mb-2">No manuscripts match your current search criteria.</p>
-                  <p className="text-zinc-500">Try adjusting your search terms or filters.</p>
+                  <h3 className="text-2xl font-bold text-white mb-3">
+                    No manuscripts found
+                  </h3>
+                  <p className="text-zinc-400 text-lg mb-2">
+                    No manuscripts match your current search criteria.
+                  </p>
+                  <p className="text-zinc-500">
+                    Try adjusting your search terms or filters.
+                  </p>
                 </div>
               ) : (
                 <div className="grid gap-6">
                   {results.map((result: SearchResult, index) =>
-                    result.type === "deck" ? renderDeckResult(result) : renderGranthaResult(result),
+                    result.type === "deck"
+                      ? renderDeckResult(result)
+                      : renderGranthaResult(result)
                   )}
                 </div>
               )}
@@ -917,7 +1047,7 @@ const ManualManuscriptSearch: React.FC = () => {
         }
       `}</style>
     </div>
-  )
-}
+  );
+};
 
-export default ManualManuscriptSearch
+export default ManualManuscriptSearch;
