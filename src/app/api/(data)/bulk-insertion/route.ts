@@ -47,6 +47,8 @@ export async function POST(request: NextRequest) {
             });
             
             const processedData = pythonResponse.data;
+
+            console.log("🟠Processed Data:", processedData);
             
             if (!processedData.data || !Array.isArray(processedData.data)) {
                 return NextResponse.json(
@@ -125,6 +127,8 @@ export async function POST(request: NextRequest) {
                             language_id: language.language_id,
                             author_id: author.author_id,
                             remarks: item.remarks || "",
+
+                            // TODO: description needs to be filled from the ui
                             description: ""
                         },
                     });
@@ -143,14 +147,17 @@ export async function POST(request: NextRequest) {
                         await tx.scanningProperties.create({
                             data: {
                                 image_id: scannedImage.image_id,
-                                worked_by: "",
+                                worked_by: item.worked_by || "",
                                 file_format: image.extension.replace(".", "").toUpperCase(),
-                                scanner_model: "Unknown", // Can be updated from form if available
+                                scanner_model: item.scanner_model || "Unknown", 
                                 resolution_dpi: Array.isArray(image.dpi) && image.dpi.length > 0 
                                     ? String(image.dpi[0]) 
                                     : "Unknown",
-                                lighting_conditions: "",
-                                color_depth: "",
+                                lighting_conditions: item.lighting_conditions || "",
+
+                                // TODO: extract this from the image
+                                color_depth: image.color_depth || "",
+
                                 scanning_start_date: item.scanning_start_date || null,
                                 scanning_completed_date: item.scanning_completed_date || null,
                                 post_scanning_completed_date: item.post_scanning_completed_date || null,
@@ -212,7 +219,7 @@ export async function POST(request: NextRequest) {
 
                                 //  subwork remarks is the same as the main grantha remarks (remarks is same for all the granthas in a particular deck)
 
-                                // TODO: description needs to bed filled from the ui
+                                // TODO: description needs to be filled from the ui
                                 remarks: item.remarks || "",
                                 description: ""
                             },
@@ -233,19 +240,22 @@ export async function POST(request: NextRequest) {
                                 await tx.scanningProperties.create({
                                     data: {
                                         image_id: scannedImage.image_id,
-                                        worked_by: "",
+                                        worked_by: item.worked_by || "",
                                         file_format: image.extension.replace(".", "").toUpperCase(),
 
                                         // TODO: currently i am keeping it as unknown later i will add a dropdown in the ui to select the scanner model
 
-                                        scanner_model: "Unknown",
+                                        scanner_model: item.scanner_model || "Unknown",
 
                                         // Check this once  (format of resolution_dpi)
                                         resolution_dpi: Array.isArray(image.dpi) && image.dpi.length > 0 
                                             ? String(image.dpi[0]) 
                                             : "Unknown",
-                                        lighting_conditions: "",
-                                        color_depth: "",
+                                        lighting_conditions: item.lighting_conditions || "",
+
+                                        // TODO: Extract this from the image itself
+                                        color_depth: image.color_depth || "",
+                                        
                                         scanning_start_date: item.scanning_start_date || null,
                                         scanning_completed_date: item.scanning_completed_date || null,
                                         post_scanning_completed_date: item.post_scanning_completed_date || null,

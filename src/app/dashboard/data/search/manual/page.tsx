@@ -830,13 +830,10 @@ const ManualManuscriptSearch: React.FC = () => {
                       className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700 transition-all duration-300"
                     >
                       <option value="">All Conditions</option>
-                      <option value="excellent">Excellent</option>
                       <option value="good">Good</option>
-                      <option value="bad">Bad</option>
                       <option value="medium">Medium</option>
-                      <option value="fair">Fair</option>
-                      <option value="poor">Poor</option>
-                      <option value="damaged">Damaged</option>
+                      <option value="bad">Bad</option>
+                      <option value="very bad">Very Bad</option>
                     </select>
                   </div>
 

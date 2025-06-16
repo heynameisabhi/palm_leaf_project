@@ -232,7 +232,7 @@ const BulkInsertionPage = () => {
 
             {/* Success Message */}
             {success && (
-              <Alert className="bg-green-900/20 border-green-800">
+              <Alert className="bg-green-900/20 border-green-800 text-green-400">
                 <Check className="h-4 w-4" />
                 <AlertTitle>Success</AlertTitle>
                 <AlertDescription>

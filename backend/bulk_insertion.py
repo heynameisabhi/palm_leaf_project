@@ -10,6 +10,71 @@ class CSVProcessRequest(BaseModel):
     csv_file_path: str
     folders_base_path: str
 
+def get_color_depth(img):
+    """Extract color depth information from PIL Image object"""
+    try:
+        mode = img.mode
+        
+        # Check if image has 16-bit per channel information
+        # This is often stored in the image info or can be inferred from the format
+        is_16bit_per_channel = False
+        
+        # Check image info for bit depth indicators
+        if hasattr(img, 'tag_v2') and img.tag_v2 is not None:
+            # For TIFF images, check BitsPerSample tag
+            bits_per_sample = img.tag_v2.get(258)  # BitsPerSample TIFF tag
+            if bits_per_sample:
+                if isinstance(bits_per_sample, (list, tuple)):
+                    if any(b == 16 for b in bits_per_sample):
+                        is_16bit_per_channel = True
+                elif bits_per_sample == 16:
+                    is_16bit_per_channel = True
+        
+        # Check image format and properties for 16-bit indicators
+        if img.format in ['TIFF', 'PNG'] and 'transparency' not in img.info:
+            # Additional checks for 16-bit images
+            if hasattr(img, 'getextrema'):
+                try:
+                    extrema = img.getextrema()
+                    if isinstance(extrema, tuple) and len(extrema) == 2:
+                        if extrema[1] > 255:  # Values beyond 8-bit range
+                            is_16bit_per_channel = True
+                except:
+                    pass
+        
+        # Calculate bits per pixel based on image mode and bit depth
+        if mode == "1":  # 1-bit pixels, black and white
+            return "1-bit"
+        elif mode == "L":  # Grayscale
+            return "16-bit grayscale" if is_16bit_per_channel else "8-bit grayscale"
+        elif mode == "P":  # Palette
+            return "8-bit palette"
+        elif mode == "RGB":  # RGB
+            return "48-bit RGB" if is_16bit_per_channel else "24-bit RGB"
+        elif mode == "RGBA":  # RGBA
+            return "64-bit RGBA" if is_16bit_per_channel else "32-bit RGBA"
+        elif mode == "CMYK":  # CMYK
+            return "64-bit CMYK" if is_16bit_per_channel else "32-bit CMYK"
+        elif mode == "YCbCr":  # YCbCr
+            return "48-bit YCbCr" if is_16bit_per_channel else "24-bit YCbCr"
+        elif mode == "LAB":  # LAB
+            return "48-bit LAB" if is_16bit_per_channel else "24-bit LAB"
+        elif mode == "HSV":  # HSV
+            return "48-bit HSV" if is_16bit_per_channel else "24-bit HSV"
+        elif mode == "LA":  # L with alpha
+            return "32-bit grayscale with alpha" if is_16bit_per_channel else "16-bit grayscale with alpha"
+        elif mode == "PA":  # P with alpha
+            return "16-bit palette with alpha"
+        elif mode == "I":  # 32-bit signed integer pixels
+            return "32-bit integer"
+        elif mode == "F":  # 32-bit floating point pixels
+            return "32-bit float"
+        else:
+            return f"Unknown mode: {mode}"
+            
+    except Exception as e:
+        return f"Error extracting color depth: {str(e)}"
+
 # Helper function to make DPI values JSON serializable
 def make_dpi_serializable(dpi_value):
     if dpi_value is None:
@@ -52,6 +117,9 @@ def get_folder_structure(root_path):
                         # Handle DPI values to make them JSON serializable
                         dpi = img.info.get("dpi")
                         file_info["dpi"] = make_dpi_serializable(dpi)
+
+                        # extract the color depth
+                        file_info["color_depth"] = get_color_depth(img)
                 except Exception as e:
                     file_info["error"] = f"Could not process image: {str(e)}"
                     file_info["resolution"] = None
@@ -189,6 +257,16 @@ def process_csv(app, csv_path, folders_base_path):
                     "scanning_completed_date": row.get('scanning_completed_date', ''),
                     "post_scanning_completed_date": row.get('post_scanning_completed_date', ''),
                     "horizontal_or_vertical_scan": row.get('horizontal_or_vertical_scan', ''),
+
+                    'worked_by': row.get('worked_by', ''),
+                    'scanner_model': row.get('scanner_model', ''),
+                    'lighting_conditions': row.get('lighting_conditions', ''),
+
+                    # 'description': row.get('description', ''),
+
+                    # Todo: Extract this from the image itself
+                    # 'color_depth': row.get('color_depth', ''),
+
                     "remarks": row.get('remarks', ''),
                     "grantha": {
                         "id": grantha_id,
