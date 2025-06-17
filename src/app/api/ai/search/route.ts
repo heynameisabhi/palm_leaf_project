@@ -48,39 +48,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 }
 
-// For Pages Router (pages/api/search/manuscripts.ts)
-import { NextApiRequest, NextApiResponse } from 'next';
-
-interface NextApiRequestWithBody extends NextApiRequest {
-  body: RequestBody;
-}
-
-// export default async function handler(
-//   req: NextApiRequestWithBody,
-//   res: NextApiResponse<SearchResponse | { error: string }>
-// ): Promise<void> {
-//   if (req.method !== 'POST') {
-//     return res.status(405).json({ error: 'Method not allowed' });
-//   }
-
-//   try {
-//     const { query } = req.body;
-    
-//     if (!query) {
-//       return res.status(400).json({ error: 'Query is required' });
-//     }
-
-//     const results = await searchManuscripts(query);
-//     res.json(results);
-//   } catch (error) {
-//     console.error('Search error:', error);
-//     res.status(500).json({ error: 'Internal server error' });
-//   }
-// }
-
 async function searchManuscripts(userQuery: string): Promise<SearchResponse> {
   try {
-    // Use Gemini to understand the user query and generate appropriate Prisma query structure
     const prompt = `
       You are a database query assistant for a palm leaf manuscript database using Prisma ORM. 
       The database has these models with relationships:
