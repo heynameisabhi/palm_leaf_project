@@ -23,9 +23,9 @@ export function Navbar() {
             href="/"
             className="flex items-center gap-2 text-white transition-opacity hover:opacity-80"
           >
-            <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-gray-800 to-gray-400 shadow-md">
+            <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-600 to-yellow-200 shadow-md">
               {/* <Leaf className="h-5 w-5 text-white" /> */}
-              <div className="absolute -inset-0.5 rounded-full bg-gradient-to-br from-gray-600 to-white opacity-50 blur-sm"></div>
+              <div className="absolute -inset-0.5 rounded-full bg-gradient-to-br from-green-600 to-white opacity-50 blur-sm"></div>
             </div>
             <span className="text-xl text-transparent bg-clip-text bg-gradient-to-tr from-gray-600 to-white font-bold tracking-widest">VEDA</span>
           </Link>

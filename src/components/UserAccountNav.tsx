@@ -64,7 +64,7 @@ const UserAccountNav: FC<UserAccountNavProps> = ({ user }) => {
             </div>
           </div>
           <ul className="py-2">
-            <li>
+            {/* <li>
               <Link
                 href="/profile"
                 className="flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
@@ -73,7 +73,7 @@ const UserAccountNav: FC<UserAccountNavProps> = ({ user }) => {
                 <UserIcon className="h-4 w-4 text-emerald-500" />
                 Profile
               </Link>
-            </li>
+            </li> */}
             <li>
               <Link
                 href={user.role === "admin" ? "/admin/dashboard" : "/dashboard"}

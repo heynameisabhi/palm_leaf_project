@@ -89,12 +89,12 @@ export default function HeroSection() {
             </div>
           </div>
 
-          <h1 ref={headingRef} className="text-4xl text-white md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-            Palm Leaf{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-green-400">
-              Transcription
+          <h1 ref={headingRef} className="text-5xl tracking-wide text-white md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+            Vedic E - {" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-green-400">
+              Documents
             </span>{" "}
-            Project
+            Archive
           </h1>
 
           <p ref={textRef} className="text-lg md:text-xl text-zinc-300 mb-8 max-w-3xl mx-auto">
