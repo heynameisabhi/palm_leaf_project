@@ -164,7 +164,7 @@ function ImageModal({ isOpen, onClose, images, initialIndex }: ImageModalProps) 
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm">
+    <div className="fixed overflow-auto inset-0 z-50 bg-black/90 backdrop-blur-sm">
       <div className="relative w-full h-full flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 bg-zinc-900/50 border-b border-zinc-800">
@@ -230,7 +230,7 @@ function ImageModal({ isOpen, onClose, images, initialIndex }: ImageModalProps) 
             )}
 
             {/* Image Container */}
-            <div className="w-full h-full flex items-center justify-center p-8">
+            <div className="w-full h-full overflow-auto flex items-center justify-center p-8">
               <div 
                 className="relative max-w-full max-h-full transition-transform duration-200"
                 style={{ 
