@@ -38,6 +38,7 @@ import {
 import { toast } from "sonner";
 import CsvDownloadLinks from "@/components/CsvDownloadLinks";
 import Link from "next/link";
+import { getScannerModels } from "@/actions/addAndGetScannerModels";
 
 interface FolderDetails {
   name: string;
@@ -66,6 +67,11 @@ interface Subfolder {
   size: number;
 }
 
+interface ScannerModel {
+  id: string;
+  name: string;
+}
+
 const page: React.FC = () => {
   const [folderPath, setFolderPath] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -78,6 +84,10 @@ const page: React.FC = () => {
   const [stitchType, setStitchType] = useState<string>("stitch");
   const [physicalCondition, setPhysicalCondition] = useState<string>("");
   const [scannerModel, setScannerModel] = useState<string>("");
+
+  const [scannerModels, setScannerModels] = useState<ScannerModel[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(true);
+  const [modelsError, setModelsError] = useState<string | null>(null);
 
   const [showCreateCsvButton, setShowCreateCsvButton] =
     useState<boolean>(false);
@@ -122,6 +132,29 @@ const page: React.FC = () => {
       setShowCreateCsvButton(true);
     }
   }, [folderDetails]);
+
+  useEffect(() => {
+    const fetchScannerModels = async () => {
+      try {
+        setIsLoadingModels(true);
+        setModelsError(null);
+        const models = await getScannerModels();
+        setScannerModels(models);
+
+        // If no scanner model is selected and we have models, select the first one
+        if (!scannerModel && models.length > 0) {
+          setScannerModel(models[0].name);
+        }
+      } catch (err) {
+        console.error("Failed to fetch scanner models:", err);
+        setModelsError("Failed to load scanner models");
+      } finally {
+        setIsLoadingModels(false);
+      }
+    };
+
+    fetchScannerModels();
+  }, [scannerModel, setScannerModel]);
 
   const extractGranthaDetails = (folderDetails: FolderDetails | null) => {
     if (folderDetails) {
@@ -361,7 +394,9 @@ const page: React.FC = () => {
           </CardHeader>
           <CardContent className="pt-6 space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Scan Type</label>
+              <label className="text-sm font-medium text-gray-300">
+                Scan Type
+              </label>
               <select
                 value={scanType}
                 onChange={(e) => setScanType(e.target.value)}
@@ -373,7 +408,9 @@ const page: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Stitch Type</label>
+              <label className="text-sm font-medium text-gray-300">
+                Stitch Type
+              </label>
               <select
                 value={stitchType}
                 onChange={(e) => setStitchType(e.target.value)}
@@ -385,28 +422,76 @@ const page: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Scanner Model</label>
-              <select
-                value={scannerModel}
-                onChange={(e) => setScannerModel(e.target.value)}
-                className="w-full bg-[#121212] border-[#1a1a1a] text-white rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500"
-              >
-                <option value="Canon CanoScan LiDE 600F">Canon CanoScan LiDE 600F</option>
-                <option value="Epson Perfection V600">Epson Perfection V600</option>
-                <option value="Canon 16000">Canon 16000</option>
-              </select>
+              <label className="text-sm font-medium text-gray-300">
+                Scanner Model
+              </label>
+              <div className="relative">
+                <select
+                  value={scannerModel}
+                  onChange={(e) => {
+                    console.log("Scanner Model set: ", e.target.value);
+                    setScannerModel(e.target.value);
+                  }}
+                  disabled={isLoadingModels || modelsError !== null}
+                  className="w-full bg-[#121212] border border-[#1a1a1a] text-white rounded-md px-3 py-2 pr-8 focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:opacity-50 disabled:cursor-not-allowed appearance-none"
+                >
+                  {isLoadingModels ? (
+                    <option value="">Loading scanner models...</option>
+                  ) : modelsError ? (
+                    <option value="">Error loading models</option>
+                  ) : scannerModels.length === 0 ? (
+                    <option value="">No scanner models available</option>
+                  ) : (
+                    <>
+                      <option value="">Select a scanner model</option>
+                      {scannerModels.map((model) => (
+                        <option key={model.id} value={model.name}>
+                          {model.name}
+                        </option>
+                      ))}
+                    </>
+                  )}
+                </select>
+
+                {/* Loading indicator */}
+                {isLoadingModels && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <Loader2 className="w-4 h-4 animate-spin text-green-400" />
+                  </div>
+                )}
+              </div>
+
+              {/* Error message */}
+              {modelsError && (
+                <p className="text-sm text-red-400 mt-1">{modelsError}</p>
+              )}
+
+              {/* No models message */}
+              {!isLoadingModels &&
+                !modelsError &&
+                scannerModels.length === 0 && (
+                  <p className="text-sm text-yellow-400 mt-1">
+                    No scanner models found. Please add some scanner models
+                    first.
+                  </p>
+                )}
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Physical Condition</label>
-              <Input
-                type="text"
-                value={physicalCondition}
-                onChange={(e) => setPhysicalCondition(e.target.value)}
-                placeholder="Enter physical condition..."
-                className="bg-[#121212] border-[#1a1a1a] text-white focus:ring-green-500 focus:border-green-500"
-              />
-            </div>
+<div className="space-y-2">
+  <label className="text-sm font-medium text-gray-300">
+    Physical Condition
+  </label>
+  <select
+    value={physicalCondition}
+    onChange={(e) => setPhysicalCondition(e.target.value)}
+    className="w-full bg-[#121212] border border-[#1a1a1a] text-white rounded-md px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 appearance-none"
+  >
+    <option value="">Select physical condition...</option>
+    <option value="good">Good</option>
+    <option value="medium">Medium</option>
+    <option value="bad">Bad</option>
+  </select>
+</div>
           </CardContent>
         </Card>
       )}
@@ -434,7 +519,8 @@ const page: React.FC = () => {
 
       <CardFooter className="border-t border-[#1a1a1a] bg-black flex justify-between mt-10 gap-2">
         <div className="text-xs text-gray-500 flex items-center">
-          <AlertCircle className="h-3 w-3 mr-1" /> Supported image formats: JPG, PNG, JPEG, WEBP, GIF, TIFF, TIF, DNG
+          <AlertCircle className="h-3 w-3 mr-1" /> Supported image formats: JPG,
+          PNG, JPEG, WEBP, GIF, TIFF, TIF, DNG
         </div>
         <Link
           href="/dashboard/data/insert/bulk-insertion"

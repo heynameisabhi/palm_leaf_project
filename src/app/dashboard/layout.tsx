@@ -17,6 +17,7 @@ import {
   Search,
   Brain,
   BrainCog,
+  Radar,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -136,6 +137,18 @@ export default function DashboardLayout({
                 >
                   <FileSpreadsheet className="w-4 h-4 mr-3" />
                   <span>View Data</span>
+                </Link>
+                <Link
+                  href="/dashboard/data/insert/scanner-model"
+                  className={cn(
+                    "flex items-center px-2 py-2 text-sm rounded-md transition-colors",
+                    pathname === "/dashboard/data/insert/scanner-model"
+                      ? "bg-zinc-800 text-emerald-400"
+                      : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                  )}
+                >
+                  <Radar className="w-4 h-4 mr-3" />
+                  <span>Add Scanner Models</span>
                 </Link>
               </div>
             )}

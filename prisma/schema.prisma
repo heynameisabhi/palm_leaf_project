@@ -117,3 +117,9 @@ model ScanningProperties {
   horizontal_or_vertical_scan  String?
   scannedImage                 ScannedImage @relation(fields: [image_id], references: [image_id], onDelete: Cascade)
 }
+
+// This table is just used for storing names of scanner models
+model ScannerModel {
+  id   String @id @default(uuid())
+  name String
+}
