@@ -36,9 +36,12 @@ import {
   RotateCw,
   Download,
   Info,
+  Trash2,
 } from "lucide-react";
 import { formatTimeAgo } from "@/helpers/formatTime";
 import Image from "next/image";
+import ConfirmationModal from "@/components/ConfirmationModal";
+import { toast } from "sonner";
 
 type ScannedImage = {
   image_id: string;
@@ -434,6 +437,10 @@ export default function GranthaViewPage({ params }: PageParams) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Delete grantha modal states
+  const [isGranthaDeleteModalOpen, setIsGranthaDeleteModalOpen] = useState(false);
+  const [isDeletingGrantha, setIsDeletingGrantha] = useState(false);
+
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["grantha-view", granthaId],
     queryFn: async () => {
@@ -449,6 +456,46 @@ export default function GranthaViewPage({ params }: PageParams) {
     },
     enabled: !!granthaId,
   });
+
+  const handleGranthaDeleteClick = () => {
+    setIsGranthaDeleteModalOpen(true);
+  };
+
+  const handleGranthaDeleteConfirm = async () => {
+    if (!grantha) return;
+
+    setIsDeletingGrantha(true);
+    try {
+      const response = await axios.delete(`/api/user/delete-grantha/${grantha.grantha_id}`);
+      
+      // Close modal
+      setIsGranthaDeleteModalOpen(false);
+
+      // Show success message with details from API response
+      const deletedData = response.data.deletedGrantha;
+      toast.success(
+        `Grantha "${deletedData.name || grantha.grantha_name || grantha.grantha_id.substring(0, 8)}" deleted successfully. ${deletedData.deletedImagesCount > 0 ? `${deletedData.deletedImagesCount} associated images were also deleted.` : ''}`
+      );
+      
+      // Navigate back to the deck view
+      router.push(`/dashboard/data/view/view-grantha-deck/${grantha.grantha_deck_id}`);
+      
+    } catch (error) {
+      console.error("Error deleting grantha:", error);
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.error || "Failed to delete grantha. Please try again.";
+        toast.error(errorMessage);
+      } else {
+        toast.error("Failed to delete grantha. Please try again.");
+      }
+    } finally {
+      setIsDeletingGrantha(false);
+    }
+  };
+
+  const handleGranthaDeleteCancel = () => {
+    setIsGranthaDeleteModalOpen(false);
+  };
 
   if (isLoading) {
     return (
@@ -600,15 +647,26 @@ export default function GranthaViewPage({ params }: PageParams) {
           </div>
 
           {isOwner && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.push(`/dashboard/data/view/edit-grantha/${grantha.grantha_id}`)}
-              className="bg-zinc-800 border-zinc-700 hover:bg-zinc-700 hover:text-white text-zinc-300 h-8 ml-auto"
-            >
-              <Edit className="h-3 w-3 mr-1" />
-              Edit Grantha
-            </Button>
+            <div className="flex gap-2 ml-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push(`/dashboard/data/view/edit-grantha/${grantha.grantha_id}`)}
+                className="bg-zinc-800 border-zinc-700 hover:bg-zinc-700 hover:text-white text-zinc-300 h-8"
+              >
+                <Edit className="h-3 w-3 mr-1" />
+                Edit Grantha
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleGranthaDeleteClick}
+                className="bg-zinc-800 border-zinc-700 hover:bg-red-800 hover:border-red-700 text-zinc-300 hover:text-red-300 h-8"
+              >
+                <Trash2 className="h-3 w-3 mr-1" />
+                Delete Grantha
+              </Button>
+            </div>
           )}
         </div>
 
@@ -778,6 +836,19 @@ export default function GranthaViewPage({ params }: PageParams) {
           initialIndex={activeImageIndex}
         />
       )}
+
+      {/* Delete Grantha Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isGranthaDeleteModalOpen}
+        onClose={handleGranthaDeleteCancel}
+        onConfirm={handleGranthaDeleteConfirm}
+        title="Delete Grantha"
+        message={`Are you sure you want to delete "${grantha?.grantha_name || `Grantha ${grantha?.grantha_id?.substring(0, 8)}`}"? This will permanently delete the grantha and all its associated data. This action cannot be undone.`}
+        confirmButtonText="Delete Grantha"
+        cancelButtonText="Cancel"
+        isLoading={isDeletingGrantha}
+        variant="danger"
+      />
     </div>
   );
 }

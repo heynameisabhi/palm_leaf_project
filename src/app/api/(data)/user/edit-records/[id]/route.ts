@@ -13,10 +13,10 @@ export async function PUT(
     }
 
     const body = await request.json();
-    
+
     // Create an update object with only the provided fields
     const updateData: any = {};
-    
+
     // Only add fields to updateData if they are provided in the request
     if (body.grantha_deck_name !== undefined) {
       updateData.grantha_deck_name = body.grantha_deck_name;
@@ -28,16 +28,24 @@ export async function PUT(
       updateData.grantha_source_address = body.grantha_source_address;
     }
     if (body.length_in_cms !== undefined) {
-      updateData.length_in_cms = body.length_in_cms ? parseFloat(body.length_in_cms) : null;
+      updateData.length_in_cms = body.length_in_cms
+        ? parseFloat(body.length_in_cms)
+        : null;
     }
     if (body.width_in_cms !== undefined) {
-      updateData.width_in_cms = body.width_in_cms ? parseFloat(body.width_in_cms) : null;
+      updateData.width_in_cms = body.width_in_cms
+        ? parseFloat(body.width_in_cms)
+        : null;
     }
     if (body.total_leaves !== undefined) {
-      updateData.total_leaves = body.total_leaves ? parseInt(body.total_leaves) : null;
+      updateData.total_leaves = body.total_leaves
+        ? parseInt(body.total_leaves)
+        : null;
     }
     if (body.total_images !== undefined) {
-      updateData.total_images = body.total_images ? parseInt(body.total_images) : null;
+      updateData.total_images = body.total_images
+        ? parseInt(body.total_images)
+        : null;
     }
     if (body.stitch_or_nonstitch !== undefined) {
       updateData.stitch_or_nonstitch = body.stitch_or_nonstitch;
@@ -98,4 +106,4 @@ export async function PUT(
       { status: 500 }
     );
   }
-} 
+}

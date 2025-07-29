@@ -15,12 +15,14 @@ import {
 } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
-import { AlertCircle, Filter, RefreshCw, Search, User, Database, Edit, Eye } from "lucide-react";
+import { AlertCircle, Filter, RefreshCw, Search, User, Database, Edit, Eye, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { formatTimeAgo } from "@/helpers/formatTime";
 import { GranthaDeck, Prisma } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import ConfirmationModal from "@/components/ConfirmationModal";
+import { toast } from "sonner";
 
 type GranthaDeckWithCount = Prisma.GranthaDeckGetPayload<{
   include: { 
@@ -39,6 +41,12 @@ export default function GranthaDeckViewer() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showAllRecords, setShowAllRecords] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "table">("table");
+  
+  // Delete modal states
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deckToDelete, setDeckToDelete] = useState<GranthaDeckWithCount | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
   const router = useRouter();
 
   const fetchGranthaDecks = async () => {
@@ -59,6 +67,41 @@ export default function GranthaDeckViewer() {
     queryFn: fetchGranthaDecks,
     enabled: !!session,
   });
+
+  const handleDeleteClick = (deck: GranthaDeckWithCount) => {
+    setDeckToDelete(deck);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deckToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await axios.delete(`/api/user/delete-records/${deckToDelete.grantha_deck_id}`);
+      
+      // Refresh the data after successful deletion
+      await refetch();
+      
+      // Close modal and reset state
+      setIsDeleteModalOpen(false);
+      setDeckToDelete(null);
+
+      toast.success(`Deck ${deckToDelete.grantha_deck_id} deleted successfully.`);
+      
+    } catch (error) {
+      console.error("Error deleting deck:", error);
+      // Handle error - you might want to show a toast notification here
+      toast.error(`Failed to delete deck ${deckToDelete?.grantha_deck_name}. Please try again.`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setIsDeleteModalOpen(false);
+    setDeckToDelete(null);
+  };
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -367,14 +410,24 @@ export default function GranthaDeckViewer() {
                       </CardContent>
                       <CardFooter className="flex justify-end gap-2">
                         {deck.user_id === session?.user?.id && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => router.push(`/dashboard/data/view/edit-grantha-deck/${deck.grantha_deck_id}`)}
-                            className="bg-zinc-800 border-zinc-700 hover:bg-zinc-700 text-zinc-300"
-                          >
-                            <Edit className="h-4 w-4 text-white" />
-                          </Button>
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => router.push(`/dashboard/data/view/edit-grantha-deck/${deck.grantha_deck_id}`)}
+                              className="bg-zinc-800 border-zinc-700 hover:bg-zinc-700 text-zinc-300"
+                            >
+                              <Edit className="h-4 w-4 text-white" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteClick(deck)}
+                              className="bg-zinc-800 border-zinc-700 hover:bg-red-800 hover:border-red-700 text-zinc-300 hover:text-red-300"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
                         )}
                         <Button
                           variant="outline"
@@ -408,20 +461,27 @@ export default function GranthaDeckViewer() {
                         </div>
                         <div className="text-zinc-400">{deck._count.granthas}</div>
                         <div className="text-zinc-400">{formatTimeAgo(new Date(deck.createdAt))}</div>
-
-                        
-                        {/* <div className="text-zinc-400">{deck.grantha_deck_id.substring(0, 6)}</div> */}
                         <div className="text-zinc-400">{deck.grantha_deck_id}</div>
                         <div className="flex gap-2">
                           {deck.user_id === session?.user?.id && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => router.push(`/dashboard/data/view/edit-grantha-deck/${deck.grantha_deck_id}`)}
-                              className="bg-zinc-800 border-zinc-700 hover:bg-zinc-700 text-zinc-300"
-                            >
-                              <Edit className="h-4 w-4 text-white" />
-                            </Button>
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => router.push(`/dashboard/data/view/edit-grantha-deck/${deck.grantha_deck_id}`)}
+                                className="bg-zinc-800 border-zinc-700 hover:bg-zinc-700 text-zinc-300"
+                              >
+                                <Edit className="h-4 w-4 text-white" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteClick(deck)}
+                                className="bg-zinc-800 border-zinc-700 hover:bg-red-800 hover:border-red-700 text-zinc-300 hover:text-red-300"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
                           )}
                           <Button
                             variant="outline"
@@ -451,6 +511,23 @@ export default function GranthaDeckViewer() {
             )}
           </>
         )}
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={handleDeleteCancel}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Grantha Deck"
+          message={
+            deckToDelete
+              ? `Are you sure you want to delete "${deckToDelete.grantha_deck_name || `Deck ${deckToDelete.grantha_deck_id.substring(0, 8)}`}"? This will permanently delete the deck and all ${deckToDelete._count.granthas} associated granthas. This action cannot be undone.`
+              : "Are you sure you want to delete this deck?"
+          }
+          confirmButtonText="Delete Deck"
+          cancelButtonText="Cancel"
+          isLoading={isDeleting}
+          variant="danger"
+        />
       </div>
     </div>
   );

@@ -33,8 +33,11 @@ import {
   CalendarDays,
   BookMarked,
   Languages,
+  Trash2,
 } from "lucide-react";
 import { formatTimeAgo } from "@/helpers/formatTime";
+import ConfirmationModal from "@/components/ConfirmationModal";
+import { toast } from "sonner";
 
 type Grantha = {
   grantha_id: string;
@@ -95,8 +98,17 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
   const router = useRouter();
   const { data: session } = useSession();
   const [viewMode, setViewMode] = useState<"grid" | "table">("table");
+  
+  // Delete deck modal states
+  const [isDeckDeleteModalOpen, setIsDeckDeleteModalOpen] = useState(false);
+  const [isDeletingDeck, setIsDeletingDeck] = useState(false);
+  
+  // Delete grantha modal states
+  const [isGranthaDeleteModalOpen, setIsGranthaDeleteModalOpen] = useState(false);
+  const [granthaToDelete, setGranthaToDelete] = useState<Grantha | null>(null);
+  const [isDeletingGrantha, setIsDeletingGrantha] = useState(false);
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["grantha-deck-view", deckId],
     queryFn: async () => {
       try {
@@ -111,6 +123,76 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
     },
     enabled: !!deckId,
   });
+
+  const handleDeckDeleteClick = () => {
+    setIsDeckDeleteModalOpen(true);
+  };
+
+  const handleDeckDeleteConfirm = async () => {
+    setIsDeletingDeck(true);
+    try {
+      await axios.delete(`/api/user/delete-records/${deckId}`);
+      
+      setIsDeckDeleteModalOpen(false);
+      toast.success(`Deck deleted successfully.`);
+      
+      // Navigate back to the deck list or dashboard
+      router.push('/dashboard/data/view');
+      
+    } catch (error) {
+      console.error("Error deleting deck:", error);
+      toast.error(`Failed to delete deck. Please try again.`);
+    } finally {
+      setIsDeletingDeck(false);
+    }
+  };
+
+  const handleDeckDeleteCancel = () => {
+    setIsDeckDeleteModalOpen(false);
+  };
+
+  const handleGranthaDeleteClick = (grantha: Grantha) => {
+    setGranthaToDelete(grantha);
+    setIsGranthaDeleteModalOpen(true);
+  };
+
+  const handleGranthaDeleteConfirm = async () => {
+    if (!granthaToDelete) return;
+
+    setIsDeletingGrantha(true);
+    try {
+      const response = await axios.delete(`/api/user/delete-grantha/${granthaToDelete.grantha_id}`);
+      
+      // Refresh the data after successful deletion
+      await refetch();
+      
+      // Close modal and reset state
+      setIsGranthaDeleteModalOpen(false);
+      setGranthaToDelete(null);
+
+      // Show success message with details from API response
+      const deletedData = response.data.deletedGrantha;
+      toast.success(
+        `Grantha "${deletedData.name || granthaToDelete.grantha_name || granthaToDelete.grantha_id.substring(0, 8)}" deleted successfully. ${deletedData.deletedImagesCount > 0 ? `${deletedData.deletedImagesCount} associated images were also deleted.` : ''}`
+      );
+      
+    } catch (error) {
+      console.error("Error deleting grantha:", error);
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.error || "Failed to delete grantha. Please try again.";
+        toast.error(errorMessage);
+      } else {
+        toast.error("Failed to delete grantha. Please try again.");
+      }
+    } finally {
+      setIsDeletingGrantha(false);
+    }
+  };
+
+  const handleGranthaDeleteCancel = () => {
+    setIsGranthaDeleteModalOpen(false);
+    setGranthaToDelete(null);
+  };
 
   if (isLoading) {
     return (
@@ -206,15 +288,26 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
             <div className="flex justify-between items-center">
               <CardTitle className="text-lg text-gray-200">Grantha Deck Details</CardTitle>
               {isOwner && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => router.push(`/dashboard/data/view/edit-grantha-deck/${deck.grantha_deck_id}`)}
-                  className="bg-zinc-800 border-zinc-700 hover:bg-zinc-700 hover:text-white text-zinc-300 h-8"
-                >
-                  <Edit className="h-3 w-3 mr-1" />
-                  Edit Deck
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push(`/dashboard/data/view/edit-grantha-deck/${deck.grantha_deck_id}`)}
+                    className="bg-zinc-800 border-zinc-700 hover:bg-zinc-700 hover:text-white text-zinc-300 h-8"
+                  >
+                    <Edit className="h-3 w-3 mr-1" />
+                    Edit Deck
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDeckDeleteClick}
+                    className="bg-zinc-800 border-zinc-700 hover:bg-red-800 hover:border-red-700 text-zinc-300 hover:text-red-300 h-8"
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Delete Deck
+                  </Button>
+                </div>
               )}
             </div>
             <CardDescription className="text-sm text-zinc-400">
@@ -347,9 +440,6 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
                           <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                             No. of Images
                           </th>
-                          {/* <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                            Created
-                          </th> */}
                           <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                             Actions
                           </th>
@@ -370,9 +460,6 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
                             <td className="px-4 py-3 text-sm text-zinc-300">
                               {grantha.scannedImages?.length || "Unknown"}
                             </td>
-                            {/* <td className="px-4 py-3 text-sm text-zinc-400">
-                              {formatTimeAgo(new Date(grantha.createdAt))}
-                            </td> */}
                             <td className="px-4 py-3 text-sm flex gap-2">
                               <Button
                                 variant="outline"
@@ -383,14 +470,24 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
                                 <Eye className="h-3 w-3" />
                               </Button>
                               {isOwner && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => router.push(`/dashboard/data/view/edit-grantha/${grantha.grantha_id}`)}
-                                  className="bg-zinc-800 border-zinc-700 hover:bg-zinc-700 hover:text-zinc-300 text-zinc-300 h-7"
-                                >
-                                  <Edit className="h-3 w-3" />
-                                </Button>
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => router.push(`/dashboard/data/view/edit-grantha/${grantha.grantha_id}`)}
+                                    className="bg-zinc-800 border-zinc-700 hover:bg-zinc-700 hover:text-zinc-300 text-zinc-300 h-7"
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleGranthaDeleteClick(grantha)}
+                                    className="bg-zinc-800 border-zinc-700 hover:bg-red-800 hover:border-red-700 text-zinc-300 hover:text-red-300 h-7"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </>
                               )}
                             </td>
                           </tr>
@@ -420,10 +517,6 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
                               <Languages className="h-3 w-3" />
                               <span className="text-zinc-300">{grantha.language?.language_name || "Unknown"}</span>
                             </div>
-                            {/* <div className="text-xs text-zinc-400 flex items-center gap-1">
-                              <CalendarDays className="h-3 w-3" />
-                              <span className="text-zinc-300">{formatTimeAgo(new Date(grantha.createdAt))}</span>
-                            </div> */}
                             {grantha.scannedImages && (
                               <div className="text-xs text-zinc-400 flex items-center gap-1">
                                 <Image className="h-3 w-3" />
@@ -431,7 +524,7 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
                               </div>
                             )}
                             {grantha.description && (
-                              <div className="text-xs text-zinc-400 flex items-center gap-1">
+                              <div className="text-xs text-zinc-400 flex items-center gap-1 col-span-2">
                                 <BookMarked className="h-3 w-3" />
                                 <span className="text-zinc-300">
                                   {grantha.description.length > 20 
@@ -453,15 +546,26 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
                             View
                           </Button>
                           {isOwner && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => router.push(`/dashboard/data/view/edit-grantha/${grantha.grantha_id}`)}
-                              className="bg-zinc-800 border-zinc-700 hover:bg-zinc-700 hover:text-zinc-300 text-zinc-300 h-7"
-                            >
-                              <Edit className="h-3 w-3 mr-1" />
-                              Edit
-                            </Button>
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => router.push(`/dashboard/data/view/edit-grantha/${grantha.grantha_id}`)}
+                                className="bg-zinc-800 border-zinc-700 hover:bg-zinc-700 hover:text-zinc-300 text-zinc-300 h-7"
+                              >
+                                <Edit className="h-3 w-3 mr-1" />
+                                Edit
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleGranthaDeleteClick(grantha)}
+                                className="bg-zinc-800 border-zinc-700 hover:bg-red-800 hover:border-red-700 text-zinc-300 hover:text-red-300 h-7"
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Delete
+                              </Button>
+                            </>
                           )}
                         </CardFooter>
                       </Card>
@@ -482,6 +586,36 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
           </CardContent>
         </Card>
       </div>
+
+      {/* Delete Deck Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeckDeleteModalOpen}
+        onClose={handleDeckDeleteCancel}
+        onConfirm={handleDeckDeleteConfirm}
+        title="Delete Grantha Deck"
+        message={`Are you sure you want to delete "${deck?.grantha_deck_name || `Deck ${deck?.grantha_deck_id?.substring(0, 8)}`}"? This will permanently delete the deck and all ${deck?._count?.granthas || 0} associated granthas. This action cannot be undone.`}
+        confirmButtonText="Delete Deck"
+        cancelButtonText="Cancel"
+        isLoading={isDeletingDeck}
+        variant="danger"
+      />
+
+      {/* Delete Grantha Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isGranthaDeleteModalOpen}
+        onClose={handleGranthaDeleteCancel}
+        onConfirm={handleGranthaDeleteConfirm}
+        title="Delete Grantha"
+        message={
+          granthaToDelete
+            ? `Are you sure you want to delete "${granthaToDelete.grantha_name || `Grantha ${granthaToDelete.grantha_id.substring(0, 8)}`}"? This will permanently delete the grantha and all its associated data. This action cannot be undone.`
+            : "Are you sure you want to delete this grantha?"
+        }
+        confirmButtonText="Delete Grantha"
+        cancelButtonText="Cancel"
+        isLoading={isDeletingGrantha}
+        variant="danger"
+      />
     </div>
   );
-} 
+}
