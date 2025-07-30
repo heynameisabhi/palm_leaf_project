@@ -69,7 +69,7 @@ export function SignInForm() {
         <CardTitle className="text-2xl font-semibold">
           Sign in{" "}
           <span className="text-[15px] text-green-600">
-            to Palmleaf transcript
+            to VEDA
           </span>
         </CardTitle>
         <CardDescription className="text-zinc-400">

@@ -100,7 +100,7 @@ export default function ContributorsSection() {
             </span>
           </h2>
           <p className="text-zinc-400 text-lg">
-            Meet the dedicated contributors behind PalmLeaf Project, working together to preserve and digitize ancient manuscripts.
+            Meet the dedicated contributors behind VEDA project, working together to preserve and digitize ancient manuscripts.
           </p>
         </motion.div>
 
