@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -8,23 +8,19 @@ import { useSession } from "next-auth/react";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/Card"; 
+} from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Skeleton } from "@/components/ui/Skeleton"; 
-import { Badge } from "@/components/ui/Badge"; 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert"; 
+import { Skeleton } from "@/components/ui/Skeleton";
+import { Badge } from "@/components/ui/Badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import {
   AlertCircle,
   ArrowLeft,
   Edit,
   Eye,
-  FileText,
   User,
-  CalendarDays,
   Languages,
   BookMarked,
   Image as ImageIcon,
@@ -38,8 +34,6 @@ import {
   Info,
   Trash2,
 } from "lucide-react";
-import { formatTimeAgo } from "@/helpers/formatTime";
-import Image from "next/image";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import { toast } from "sonner";
 
@@ -109,25 +103,61 @@ interface ImageModalProps {
   initialIndex: number;
 }
 
-function ImageModal({ isOpen, onClose, images, initialIndex }: ImageModalProps) {
+function ImageModal({
+  isOpen,
+  onClose,
+  images,
+  initialIndex,
+}: ImageModalProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [showDetails, setShowDetails] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
 
+  // Keyboard event handler
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!isOpen) return;
+
+      switch (event.key) {
+        case "ArrowLeft":
+          event.preventDefault();
+          prevImage();
+          break;
+        case "ArrowRight":
+          event.preventDefault();
+          nextImage();
+          break;
+        case "Escape":
+          event.preventDefault();
+          onClose();
+          break;
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]); // Dependencies for the effect
+
   if (!isOpen || !images.length) return null;
 
   const currentImage = images[currentIndex];
 
   const getImageUrl = (imagePath: string) => {
-    const isTiff = imagePath.toLowerCase().endsWith('.tif') || 
-                   imagePath.toLowerCase().endsWith('.tiff');
-    
+    const isTiff =
+      imagePath.toLowerCase().endsWith(".tif") ||
+      imagePath.toLowerCase().endsWith(".tiff");
+
     if (isTiff) {
       return `/api/images?path=${encodeURIComponent(imagePath)}&format=jpeg`;
     }
-    
+
     return `/api/images?path=${encodeURIComponent(imagePath)}`;
   };
 
@@ -145,16 +175,16 @@ function ImageModal({ isOpen, onClose, images, initialIndex }: ImageModalProps) 
     setImageLoading(true);
   };
 
-  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.25, 3));
-  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.25, 0.25));
-  const handleRotate = () => setRotation(prev => (prev + 90) % 360);
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.25, 3));
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.25, 0.25));
+  const handleRotate = () => setRotation((prev) => (prev + 90) % 360);
 
   const handleDownload = async () => {
     try {
       const response = await fetch(getImageUrl(currentImage.image_url));
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = currentImage.image_name || `image-${currentIndex + 1}`;
       document.body.appendChild(a);
@@ -162,7 +192,7 @@ function ImageModal({ isOpen, onClose, images, initialIndex }: ImageModalProps) 
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Download failed:', error);
+      console.error("Download failed:", error);
     }
   };
 
@@ -179,8 +209,21 @@ function ImageModal({ isOpen, onClose, images, initialIndex }: ImageModalProps) 
               {currentIndex + 1} of {images.length}
             </Badge>
           </div>
-          
+
           <div className="flex items-center gap-2">
+            {/* Keyboard hint */}
+            {images.length > 1 && (
+              <div className="hidden md:flex items-center gap-2 text-xs text-zinc-500 mr-4">
+                <span>Use</span>
+                <kbd className="px-1 py-0.5 bg-zinc-800 border border-zinc-700 rounded text-zinc-300">
+                  ←
+                </kbd>
+                <kbd className="px-1 py-0.5 bg-zinc-800 border border-zinc-700 rounded text-zinc-300">
+                  →
+                </kbd>
+                <span>to navigate</span>
+              </div>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -234,11 +277,11 @@ function ImageModal({ isOpen, onClose, images, initialIndex }: ImageModalProps) 
 
             {/* Image Container */}
             <div className="w-full h-full overflow-auto flex items-center justify-center p-8">
-              <div 
+              <div
                 className="relative max-w-full max-h-full transition-transform duration-200"
-                style={{ 
+                style={{
                   transform: `scale(${zoom}) rotate(${rotation}deg)`,
-                  transformOrigin: 'center'
+                  transformOrigin: "center",
                 }}
               >
                 {imageLoading && (
@@ -252,8 +295,8 @@ function ImageModal({ isOpen, onClose, images, initialIndex }: ImageModalProps) 
                   className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
                   onLoad={() => setImageLoading(false)}
                   onError={() => setImageLoading(false)}
-                  style={{ 
-                    display: imageLoading ? 'none' : 'block'
+                  style={{
+                    display: imageLoading ? "none" : "block",
                   }}
                 />
               </div>
@@ -297,91 +340,157 @@ function ImageModal({ isOpen, onClose, images, initialIndex }: ImageModalProps) 
             <div className="w-96 bg-zinc-900/50 border-l border-zinc-800 p-4 overflow-y-auto">
               <Card className="bg-zinc-950/50 border-zinc-800">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg text-white">Image Details</CardTitle>
+                  <CardTitle className="text-lg text-white">
+                    Image Details
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <h4 className="text-sm font-medium text-zinc-400 mb-2">Basic Info</h4>
+                    <h4 className="text-sm font-medium text-zinc-400 mb-2">
+                      Basic Info
+                    </h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-zinc-500">Name:</span>
-                        <span className="text-zinc-300">{currentImage.image_name || 'Unnamed'}</span>
+                        <span className="text-zinc-300">
+                          {currentImage.image_name || "Unnamed"}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-zinc-500">ID:</span>
-                        <span className="text-zinc-300 font-mono text-xs">{currentImage.image_id.substring(0, 8)}...</span>
+                        <span className="text-zinc-300 font-mono text-xs">
+                          {currentImage.image_id.substring(0, 8)}...
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   {currentImage.scanningProperties && (
                     <div>
-                      <h4 className="text-sm font-medium text-zinc-400 mb-2">Scanning Properties</h4>
+                      <h4 className="text-sm font-medium text-zinc-400 mb-2">
+                        Scanning Properties
+                      </h4>
                       <div className="space-y-2 text-sm">
                         {currentImage.scanningProperties.scan_id && (
                           <div className="flex justify-between">
                             <span className="text-zinc-500">Scan ID:</span>
-                            <span className="text-zinc-300">{currentImage.scanningProperties.scan_id.substring(0, 8)}...</span>
+                            <span className="text-zinc-300">
+                              {currentImage.scanningProperties.scan_id.substring(
+                                0,
+                                8
+                              )}
+                              ...
+                            </span>
                           </div>
                         )}
                         {currentImage.scanningProperties.resolution_dpi && (
                           <div className="flex justify-between">
                             <span className="text-zinc-500">Resolution:</span>
-                            <span className="text-zinc-300">{currentImage.scanningProperties.resolution_dpi}</span>
+                            <span className="text-zinc-300">
+                              {currentImage.scanningProperties.resolution_dpi}
+                            </span>
                           </div>
                         )}
                         {currentImage.scanningProperties.file_format && (
                           <div className="flex justify-between">
                             <span className="text-zinc-500">Format:</span>
-                            <span className="text-zinc-300">{currentImage.scanningProperties.file_format}</span>
+                            <span className="text-zinc-300">
+                              {currentImage.scanningProperties.file_format}
+                            </span>
                           </div>
                         )}
-                        {currentImage.scanningProperties.horizontal_or_vertical_scan && (
+                        {currentImage.scanningProperties
+                          .horizontal_or_vertical_scan && (
                           <div className="flex justify-between">
                             <span className="text-zinc-500">Scan Type:</span>
-                            <span className="text-zinc-300">{currentImage.scanningProperties.horizontal_or_vertical_scan}</span>
+                            <span className="text-zinc-300">
+                              {
+                                currentImage.scanningProperties
+                                  .horizontal_or_vertical_scan
+                              }
+                            </span>
                           </div>
                         )}
                         {currentImage.scanningProperties.worked_by && (
                           <div className="flex justify-between">
                             <span className="text-zinc-500">Worked By:</span>
-                            <span className="text-zinc-300">{currentImage.scanningProperties.worked_by}</span>
+                            <span className="text-zinc-300">
+                              {currentImage.scanningProperties.worked_by}
+                            </span>
                           </div>
                         )}
                         {currentImage.scanningProperties.scanner_model && (
                           <div className="flex justify-between">
-                            <span className="text-zinc-500">Scanner model:</span>
-                            <span className="text-zinc-300">{currentImage.scanningProperties.scanner_model}</span>
+                            <span className="text-zinc-500">
+                              Scanner model:
+                            </span>
+                            <span className="text-zinc-300">
+                              {currentImage.scanningProperties.scanner_model}
+                            </span>
                           </div>
                         )}
                         {currentImage.scanningProperties.color_depth && (
                           <div className="flex justify-between">
                             <span className="text-zinc-500">Color Depth:</span>
-                            <span className="text-zinc-300">{currentImage.scanningProperties.color_depth}</span>
+                            <span className="text-zinc-300">
+                              {currentImage.scanningProperties.color_depth}
+                            </span>
                           </div>
                         )}
-                        {currentImage.scanningProperties.lighting_conditions && (
+                        {currentImage.scanningProperties
+                          .lighting_conditions && (
                           <div className="flex justify-between">
-                            <span className="text-zinc-500">Lighting Condition:</span>
-                            <span className="text-zinc-300">{currentImage.scanningProperties.lighting_conditions}</span>
+                            <span className="text-zinc-500">
+                              Lighting Condition:
+                            </span>
+                            <span className="text-zinc-300">
+                              {
+                                currentImage.scanningProperties
+                                  .lighting_conditions
+                              }
+                            </span>
                           </div>
                         )}
-                        {currentImage.scanningProperties.scanning_start_date && (
+                        {currentImage.scanningProperties
+                          .scanning_start_date && (
                           <div className="flex justify-between">
-                            <span className="text-zinc-500">Scanning Start Date:</span>
-                            <span className="text-zinc-300">{currentImage.scanningProperties.scanning_start_date}</span>
+                            <span className="text-zinc-500">
+                              Scanning Start Date:
+                            </span>
+                            <span className="text-zinc-300">
+                              {
+                                currentImage.scanningProperties
+                                  .scanning_start_date
+                              }
+                            </span>
                           </div>
                         )}
-                        {currentImage.scanningProperties.scanning_completed_date && (
+                        {currentImage.scanningProperties
+                          .scanning_completed_date && (
                           <div className="flex justify-between">
-                            <span className="text-zinc-500">Scanning Completed Date:</span>
-                            <span className="text-zinc-300">{currentImage.scanningProperties.scanning_completed_date}</span>
+                            <span className="text-zinc-500">
+                              Scanning Completed Date:
+                            </span>
+                            <span className="text-zinc-300">
+                              {
+                                currentImage.scanningProperties
+                                  .scanning_completed_date
+                              }
+                            </span>
                           </div>
                         )}
-                        {currentImage.scanningProperties.post_scanning_completed_date && (
+                        {currentImage.scanningProperties
+                          .post_scanning_completed_date && (
                           <div className="flex justify-between">
-                            <span className="text-zinc-500">Post Scanning Completed Date:</span>
-                            <span className="text-zinc-300">{currentImage.scanningProperties.post_scanning_completed_date}</span>
+                            <span className="text-zinc-500">
+                              Post Scanning Completed Date:
+                            </span>
+                            <span className="text-zinc-300">
+                              {
+                                currentImage.scanningProperties
+                                  .post_scanning_completed_date
+                              }
+                            </span>
                           </div>
                         )}
                       </div>
@@ -407,17 +516,17 @@ function ImageModal({ isOpen, onClose, images, initialIndex }: ImageModalProps) 
                     setImageLoading(true);
                   }}
                   className={`relative w-16 h-16 rounded-md overflow-hidden cursor-pointer flex-shrink-0 transition-all ${
-                    currentIndex === index 
-                      ? "ring-2 ring-white" 
+                    currentIndex === index
+                      ? "ring-2 ring-white"
                       : "opacity-70 hover:opacity-100"
                   }`}
                 >
-                  <div 
+                  <div
                     className="w-full h-full bg-cover bg-center"
-                    style={{ 
+                    style={{
                       backgroundImage: `url('${getImageUrl(image.image_url)}')`,
-                      backgroundPosition: 'center',
-                      backgroundSize: 'cover' 
+                      backgroundPosition: "center",
+                      backgroundSize: "cover",
                     }}
                   />
                 </div>
@@ -438,7 +547,8 @@ export default function GranthaViewPage({ params }: PageParams) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Delete grantha modal states
-  const [isGranthaDeleteModalOpen, setIsGranthaDeleteModalOpen] = useState(false);
+  const [isGranthaDeleteModalOpen, setIsGranthaDeleteModalOpen] =
+    useState(false);
   const [isDeletingGrantha, setIsDeletingGrantha] = useState(false);
 
   const { data, isLoading, isError, error } = useQuery({
@@ -466,24 +576,37 @@ export default function GranthaViewPage({ params }: PageParams) {
 
     setIsDeletingGrantha(true);
     try {
-      const response = await axios.delete(`/api/user/delete-grantha/${grantha.grantha_id}`);
-      
+      const response = await axios.delete(
+        `/api/user/delete-grantha/${grantha.grantha_id}`
+      );
+
       // Close modal
       setIsGranthaDeleteModalOpen(false);
 
       // Show success message with details from API response
       const deletedData = response.data.deletedGrantha;
       toast.success(
-        `Grantha "${deletedData.name || grantha.grantha_name || grantha.grantha_id.substring(0, 8)}" deleted successfully. ${deletedData.deletedImagesCount > 0 ? `${deletedData.deletedImagesCount} associated images were also deleted.` : ''}`
+        `Grantha "${
+          deletedData.name ||
+          grantha.grantha_name ||
+          grantha.grantha_id.substring(0, 8)
+        }" deleted successfully. ${
+          deletedData.deletedImagesCount > 0
+            ? `${deletedData.deletedImagesCount} associated images were also deleted.`
+            : ""
+        }`
       );
-      
+
       // Navigate back to the deck view
-      router.push(`/dashboard/data/view/view-grantha-deck/${grantha.grantha_deck_id}`);
-      
+      router.push(
+        `/dashboard/data/view/view-grantha-deck/${grantha.grantha_deck_id}`
+      );
     } catch (error) {
       console.error("Error deleting grantha:", error);
       if (axios.isAxiosError(error)) {
-        const errorMessage = error.response?.data?.error || "Failed to delete grantha. Please try again.";
+        const errorMessage =
+          error.response?.data?.error ||
+          "Failed to delete grantha. Please try again.";
         toast.error(errorMessage);
       } else {
         toast.error("Failed to delete grantha. Please try again.");
@@ -598,7 +721,7 @@ export default function GranthaViewPage({ params }: PageParams) {
   const grantha: Grantha = data?.grantha;
   const isOwner = session?.user?.id === grantha.granthaDeck.user_id;
   const hasImages = grantha.scannedImages && grantha.scannedImages.length > 0;
-  
+
   if (hasImages && activeImageIndex >= grantha.scannedImages!.length) {
     setActiveImageIndex(0);
   }
@@ -606,14 +729,15 @@ export default function GranthaViewPage({ params }: PageParams) {
   // Helper function to get image URL with proper format handling
   const getImageUrl = (imagePath: string) => {
     // Check if it's a TIFF file
-    const isTiff = imagePath.toLowerCase().endsWith('.tif') || 
-                   imagePath.toLowerCase().endsWith('.tiff');
-    
+    const isTiff =
+      imagePath.toLowerCase().endsWith(".tif") ||
+      imagePath.toLowerCase().endsWith(".tiff");
+
     // If it's a TIFF, explicitly request JPEG conversion
     if (isTiff) {
       return `/api/images?path=${encodeURIComponent(imagePath)}&format=jpeg`;
     }
-    
+
     // For other formats, let the API handle automatic format detection
     return `/api/images?path=${encodeURIComponent(imagePath)}`;
   };
@@ -637,11 +761,21 @@ export default function GranthaViewPage({ params }: PageParams) {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-gray-200">
-              {grantha.grantha_name || `Grantha ${grantha.grantha_id.substring(0, 8)}`}
+              {grantha.grantha_name ||
+                `Grantha ${grantha.grantha_id.substring(0, 8)}`}
             </h1>
             <p className="text-muted-foreground text-sm">
-              From deck <span className="underline cursor-pointer hover:text-white" onClick={() => router.push(`/dashboard/data/view/view-grantha-deck/${grantha.grantha_deck_id}`)}>
-                {grantha.granthaDeck.grantha_deck_name || `Deck ${grantha.grantha_deck_id.substring(0, 8)}`}
+              From deck{" "}
+              <span
+                className="underline cursor-pointer hover:text-white"
+                onClick={() =>
+                  router.push(
+                    `/dashboard/data/view/view-grantha-deck/${grantha.grantha_deck_id}`
+                  )
+                }
+              >
+                {grantha.granthaDeck.grantha_deck_name ||
+                  `Deck ${grantha.grantha_deck_id.substring(0, 8)}`}
               </span>
             </p>
           </div>
@@ -651,7 +785,11 @@ export default function GranthaViewPage({ params }: PageParams) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => router.push(`/dashboard/data/view/edit-grantha/${grantha.grantha_id}`)}
+                onClick={() =>
+                  router.push(
+                    `/dashboard/data/view/edit-grantha/${grantha.grantha_id}`
+                  )
+                }
                 className="bg-zinc-800 border-zinc-700 hover:bg-zinc-700 hover:text-white text-zinc-300 h-8"
               >
                 <Edit className="h-3 w-3 mr-1" />
@@ -675,10 +813,14 @@ export default function GranthaViewPage({ params }: PageParams) {
             {grantha.description && (
               <Card className="bg-zinc-950 border-zinc-800">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-lg text-gray-200">Description</CardTitle>
+                  <CardTitle className="text-lg text-gray-200">
+                    Description
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-zinc-300 whitespace-pre-wrap">{grantha.description}</p>
+                  <p className="text-zinc-300 whitespace-pre-wrap">
+                    {grantha.description}
+                  </p>
                 </CardContent>
               </Card>
             )}
@@ -690,49 +832,76 @@ export default function GranthaViewPage({ params }: PageParams) {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <h3 className="text-sm font-medium text-zinc-400">Grantha ID</h3>
+                    <h3 className="text-sm font-medium text-zinc-400">
+                      Grantha ID
+                    </h3>
                     <p className="text-zinc-300 mt-1">{grantha.grantha_id}</p>
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-medium text-zinc-400">Author</h3>
-                    <p className="text-zinc-300 mt-1">{grantha.author.author_name || "Not specified"}</p>
+                    <h3 className="text-sm font-medium text-zinc-400">
+                      Author
+                    </h3>
+                    <p className="text-zinc-300 mt-1">
+                      {grantha.author.author_name || "Not specified"}
+                    </p>
                     {grantha.author.birth_year && grantha.author.death_year && (
                       <p className="text-xs text-zinc-500">
-                        ({grantha.author.birth_year} - {grantha.author.death_year})
+                        ({grantha.author.birth_year} -{" "}
+                        {grantha.author.death_year})
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-medium text-zinc-400">Language</h3>
-                    <p className="text-zinc-300 mt-1">{grantha.language.language_name || "Not specified"}</p>
+                    <h3 className="text-sm font-medium text-zinc-400">
+                      Language
+                    </h3>
+                    <p className="text-zinc-300 mt-1">
+                      {grantha.language.language_name || "Not specified"}
+                    </p>
                   </div>
 
                   {grantha.author.scribe_name && (
                     <div>
-                      <h3 className="text-sm font-medium text-zinc-400">Scribe</h3>
-                      <p className="text-zinc-300 mt-1">{grantha.author.scribe_name}</p>
+                      <h3 className="text-sm font-medium text-zinc-400">
+                        Scribe
+                      </h3>
+                      <p className="text-zinc-300 mt-1">
+                        {grantha.author.scribe_name}
+                      </p>
                     </div>
                   )}
 
                   <div>
-                    <h3 className="text-sm font-medium text-zinc-400">Added By</h3>
-                    <p className="text-zinc-300 mt-1">{grantha.granthaDeck.user?.user_name || "Unknown"}</p>
+                    <h3 className="text-sm font-medium text-zinc-400">
+                      Added By
+                    </h3>
+                    <p className="text-zinc-300 mt-1">
+                      {grantha.granthaDeck.user?.user_name || "Unknown"}
+                    </p>
                   </div>
                 </div>
 
                 {grantha.remarks && (
                   <div className="mt-4">
-                    <h3 className="text-sm font-medium text-zinc-400">Remarks</h3>
-                    <p className="text-zinc-300 mt-1 whitespace-pre-wrap">{grantha.remarks}</p>
+                    <h3 className="text-sm font-medium text-zinc-400">
+                      Remarks
+                    </h3>
+                    <p className="text-zinc-300 mt-1 whitespace-pre-wrap">
+                      {grantha.remarks}
+                    </p>
                   </div>
                 )}
 
                 {grantha.author.bio && (
                   <div className="mt-4">
-                    <h3 className="text-sm font-medium text-zinc-400">Author Bio</h3>
-                    <p className="text-zinc-300 mt-1 whitespace-pre-wrap">{grantha.author.bio}</p>
+                    <h3 className="text-sm font-medium text-zinc-400">
+                      Author Bio
+                    </h3>
+                    <p className="text-zinc-300 mt-1 whitespace-pre-wrap">
+                      {grantha.author.bio}
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -743,19 +912,23 @@ export default function GranthaViewPage({ params }: PageParams) {
             {hasImages && (
               <Card className="bg-zinc-950 border-zinc-800">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-lg text-gray-200">Images</CardTitle>
+                  <CardTitle className="text-lg text-gray-200">
+                    Images
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div 
+                  <div
                     className="relative aspect-square overflow-hidden rounded-md mb-3 cursor-pointer group"
                     onClick={() => openModal(activeImageIndex)}
                   >
-                    <div 
+                    <div
                       className="w-full h-full bg-cover bg-center transition-transform group-hover:scale-105"
-                      style={{ 
-                        backgroundImage: `url('${getImageUrl(grantha.scannedImages![activeImageIndex].image_url)}')`,
-                        backgroundPosition: 'center',
-                        backgroundSize: 'cover' 
+                      style={{
+                        backgroundImage: `url('${getImageUrl(
+                          grantha.scannedImages![activeImageIndex].image_url
+                        )}')`,
+                        backgroundPosition: "center",
+                        backgroundSize: "cover",
                       }}
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
@@ -770,15 +943,19 @@ export default function GranthaViewPage({ params }: PageParams) {
                           key={image.image_id}
                           onClick={() => setActiveImageIndex(index)}
                           className={`relative w-16 h-16 rounded-md overflow-hidden cursor-pointer transition-all ${
-                            activeImageIndex === index ? "ring-2 ring-white" : "opacity-70 hover:opacity-100"
+                            activeImageIndex === index
+                              ? "ring-2 ring-white"
+                              : "opacity-70 hover:opacity-100"
                           }`}
                         >
-                          <div 
+                          <div
                             className="w-full h-full bg-cover bg-center"
-                            style={{ 
-                              backgroundImage: `url('${getImageUrl(image.image_url)}')`,
-                              backgroundPosition: 'center',
-                              backgroundSize: 'cover' 
+                            style={{
+                              backgroundImage: `url('${getImageUrl(
+                                image.image_url
+                              )}')`,
+                              backgroundPosition: "center",
+                              backgroundSize: "cover",
                             }}
                           />
                         </div>
@@ -791,29 +968,38 @@ export default function GranthaViewPage({ params }: PageParams) {
 
             <Card className="bg-zinc-950 border-zinc-800">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg text-gray-200">Quick Info</CardTitle>
+                <CardTitle className="text-lg text-gray-200">
+                  Quick Info
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-zinc-500" />
-                    <span className="text-sm text-zinc-300">Author: {grantha.author.author_name || "Not specified"}</span>
+                    <span className="text-sm text-zinc-300">
+                      Author: {grantha.author.author_name || "Not specified"}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Languages className="h-4 w-4 text-zinc-500" />
-                    <span className="text-sm text-zinc-300">Language: {grantha.language.language_name || "Not specified"}</span>
+                    <span className="text-sm text-zinc-300">
+                      Language:{" "}
+                      {grantha.language.language_name || "Not specified"}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <BookMarked className="h-4 w-4 text-zinc-500" />
                     <span className="text-sm text-zinc-300">
-                      Contains: {grantha.description ? "Description" : "No description"}
+                      Contains:{" "}
+                      {grantha.description ? "Description" : "No description"}
                       {grantha.remarks ? ", Notes" : ""}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <ImageIcon className="h-4 w-4 text-zinc-500" />
                     <span className="text-sm text-zinc-300">
-                      Images: {hasImages ? grantha.scannedImages!.length : "None"}
+                      Images:{" "}
+                      {hasImages ? grantha.scannedImages!.length : "None"}
                     </span>
                   </div>
                   {/* <div className="flex items-center gap-2">
@@ -843,7 +1029,10 @@ export default function GranthaViewPage({ params }: PageParams) {
         onClose={handleGranthaDeleteCancel}
         onConfirm={handleGranthaDeleteConfirm}
         title="Delete Grantha"
-        message={`Are you sure you want to delete "${grantha?.grantha_name || `Grantha ${grantha?.grantha_id?.substring(0, 8)}`}"? This will permanently delete the grantha and all its associated data. This action cannot be undone.`}
+        message={`Are you sure you want to delete "${
+          grantha?.grantha_name ||
+          `Grantha ${grantha?.grantha_id?.substring(0, 8)}`
+        }"? This will permanently delete the grantha and all its associated data. This action cannot be undone.`}
         confirmButtonText="Delete Grantha"
         cancelButtonText="Cancel"
         isLoading={isDeletingGrantha}
