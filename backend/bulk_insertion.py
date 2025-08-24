@@ -43,6 +43,28 @@ def clean_key(key: str) -> str:
     """Clean and normalize a key for comparison"""
     return key.strip().lower().replace("-", " ").replace("_", " ").replace("/", " ").replace("(", "").replace(")", "")
 
+def clean_language_text(text: str) -> str:
+    """Clean language text by removing all types of quotes and extra whitespace"""
+    if not text:
+        return text
+    
+    # Remove all types of quotes: single, double, curly quotes, etc.
+    cleaned = text.strip()
+    
+    # Remove various quote characters
+    quote_chars = ['"', "'", '"', '"', ''', ''', '`', '´']
+    for quote in quote_chars:
+        cleaned = cleaned.replace(quote, '')
+    
+    # Clean up extra whitespace
+    cleaned = cleaned.strip()
+    
+    # Capitalize first letter for consistency
+    if cleaned:
+        cleaned = cleaned[0].upper() + cleaned[1:].lower()
+    
+    return cleaned
+
 def create_header_mapping(csv_headers: List[str]) -> Dict[str, str]:
     """Create a mapping from actual CSV headers to canonical field names"""
     header_mapping = {}
@@ -213,13 +235,18 @@ def get_folder_structure(root_path):
     return {**folder_structure, "totalImages": total_images}
 
 def parse_grantha_info(grantha_text):
+    """Parse grantha info and clean language text"""
     pattern = r"(.+?)\s*:\s*(.+?)\s*-\s*(.+)"
     match = re.match(pattern, grantha_text.strip())
     if match:
+        name = match.group(1).strip()
+        author = match.group(2).strip()
+        language = clean_language_text(match.group(3).strip())  # Clean the language
+        
         return {
-            "name": match.group(1).strip(),
-            "author": match.group(2).strip(),
-            "language": match.group(3).strip()
+            "name": name,
+            "author": author,
+            "language": language
         }
     return {
         "name": grantha_text.strip(),
@@ -228,10 +255,12 @@ def parse_grantha_info(grantha_text):
     }
 
 def parse_subworks(subworks_text):
+    """Parse subworks and clean language text for each"""
     subworks = []
     for subwork in re.split(r'\s*,\s*', subworks_text.strip()):
         if subwork:
-            subworks.append(parse_grantha_info(subwork))
+            parsed_subwork = parse_grantha_info(subwork)
+            subworks.append(parsed_subwork)
     return subworks
 
 def process_csv(app, csv_path, folders_base_path):

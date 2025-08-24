@@ -7,6 +7,32 @@ import { authOptions, getAuthSession } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { Prisma } from "@prisma/client";
 
+// Helper function to clean language text by removing quotes and standardizing format
+const cleanLanguageText = (text: string): string => {
+    if (!text) {
+        return text;
+    }
+    
+    // Remove all types of quotes: single, double, curly quotes, etc.
+    let cleaned = text.trim();
+    
+    // Remove various quote characters
+    const quoteChars = ['"', "'", '"', '"', '`', '´'];
+    quoteChars.forEach(quote => {
+        cleaned = cleaned.replace(new RegExp(quote, 'g'), '');
+    });
+    
+    // Clean up extra whitespace
+    cleaned = cleaned.trim();
+    
+    // Capitalize first letter for consistency
+    if (cleaned) {
+        cleaned = cleaned[0].toUpperCase() + cleaned.slice(1).toLowerCase();
+    }
+    
+    return cleaned;
+};
+
 // Helper function to delete user CSV files
 const deleteUserCsvFiles = (userId: string) => {
     try {
@@ -108,6 +134,9 @@ export async function POST(request: NextRequest) {
                         throw new Error(`Missing required fields in Grantha data: ${JSON.stringify(grantha)}`);
                     }
                     
+                    // Clean the language text to remove quotes and standardize format
+                    const cleanedLanguage = cleanLanguageText(grantha.language);
+                    
                     // check if author is present
                     let author = await tx.author.findFirst({
                         where: {
@@ -122,20 +151,24 @@ export async function POST(request: NextRequest) {
                         throw new Error(`Author ${grantha.author} not found!`);
                     }
 
-                    // Check if the language is already present
+                    // Check if the language is already present using cleaned language
                     let language = await tx.language.findFirst({
                         where: {
                             language_name: {
-                                equals: grantha.language.trim().toLowerCase(),
+                                equals: cleanedLanguage.toLowerCase(),
                                 mode: "insensitive",
                             },
                         },
                     });
 
                     if (!language) {
+                        // Store the cleaned language name
                         language = await tx.language.create({
-                            data: { language_name: grantha.language.trim() },
+                            data: { language_name: cleanedLanguage },
                         });
+                        console.log(`Created new language: ${cleanedLanguage} (original: ${grantha.language})`);
+                    } else {
+                        console.log(`Found existing language: ${language.language_name} (matched with cleaned: ${cleanedLanguage})`);
                     }
 
                     await tx.grantha.create({
