@@ -477,21 +477,22 @@ const page: React.FC = () => {
                 )}
             </div>
 
-<div className="space-y-2">
-  <label className="text-sm font-medium text-gray-300">
-    Physical Condition
-  </label>
-  <select
-    value={physicalCondition}
-    onChange={(e) => setPhysicalCondition(e.target.value)}
-    className="w-full bg-[#121212] border border-[#1a1a1a] text-white rounded-md px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 appearance-none"
-  >
-    <option value="">Select physical condition...</option>
-    <option value="good">Good</option>
-    <option value="medium">Medium</option>
-    <option value="bad">Bad</option>
-  </select>
-</div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">
+                Physical Condition
+              </label>
+              <select
+                value={physicalCondition}
+                onChange={(e) => setPhysicalCondition(e.target.value)}
+                className="w-full bg-[#121212] border border-[#1a1a1a] text-white rounded-md px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 appearance-none"
+              >
+                <option value="">Select physical condition...</option>
+                <option value="good">Good</option>
+                <option value="medium">Medium</option>
+                <option value="bad">Bad</option>
+                <option value="very bad">Very Bad</option>
+              </select>
+            </div>
           </CardContent>
         </Card>
       )}
