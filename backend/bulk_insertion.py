@@ -65,6 +65,238 @@ def clean_language_text(text: str) -> str:
     
     return cleaned
 
+def is_valid_image_file(filename: str) -> bool:
+    """
+    Enhanced check for valid image files with comprehensive hidden file filtering.
+    Filters out thumbnail files, system files, hidden files, and other unwanted files.
+    """
+    if not filename:
+        return False
+        
+    filename_lower = filename.lower()
+    
+    # First check: Exclude hidden files (starting with dot) - this catches ._ files too
+    if filename.startswith('.'):
+        print(f"[DEBUG] Skipping hidden file: {filename}")
+        return False
+    
+    # Second check: Exclude system-specific hidden files and thumbnails
+    exclude_patterns = [
+        # Windows thumbnail and system files
+        'thumbs.db',
+        'thumbs',
+        'thumbnail',
+        'thumb',
+        '_thumb',
+        '.thumb',
+        'desktop.ini',
+        'folder.jpg',
+        'albumart',
+        
+        # macOS system files
+        '.ds_store',
+        '._',  # Resource fork files
+        '.localized',
+        '.fseventsd',
+        '.spotlight',
+        '.trashes',
+        '.volumeicon',
+        '.directory',
+        
+        # Linux/Unix hidden files
+        '.picasa.ini',
+        '.picasaoriginals',
+        '.xvpics',
+        
+        # Temporary and cache files
+        '.tmp',
+        '.temp',
+        '~',
+        '.cache',
+        '.preview',
+        '.bak',
+        '.backup',
+        
+        # Image editor temp files
+        '.psd~',
+        '.ai~',
+        '.indd~',
+        
+        # Web browser cache
+        '.webp.webp',
+        
+        # Scanner software temp files
+        'scan_temp',
+        'preview',
+    ]
+    
+    # Check if filename contains any excluded patterns (case-insensitive)
+    for pattern in exclude_patterns:
+        if pattern in filename_lower:
+            print(f"[DEBUG] Skipping file with excluded pattern '{pattern}': {filename}")
+            return False
+    
+    # Third check: Advanced pattern matching for suspicious filenames
+    suspicious_patterns = [
+        r'^thumbs?.*\d*\..*$',        # thumb001.jpg, thumbs.jpg, thumbnail_001.png, etc.
+        r'^.*_thumb.*\..*$',          # image_thumb.jpg, photo_thumbnail.png
+        r'^.*_small\..*$',            # image_small.jpg
+        r'^.*_preview\..*$',          # image_preview.jpg
+        r'^.*_mini\..*$',             # image_mini.jpg
+        r'^.*_icon\..*$',             # image_icon.jpg
+        r'^.*_cache\..*$',            # image_cache.jpg
+        r'^preview_.*\..*$',          # preview_image.jpg
+        r'^small_.*\..*$',            # small_image.jpg
+        r'^mini_.*\..*$',             # mini_image.jpg
+        r'^icon_.*\..*$',             # icon_image.jpg
+        r'^\..*',                     # Any file starting with dot (redundant but safe)
+        r'^_.*',                      # Files starting with underscore (often system files)
+        r'.*\.tmp\..*$',              # Files with .tmp in middle
+        r'^temp_.*\..*$',             # temp_file.jpg
+    ]
+    
+    for pattern in suspicious_patterns:
+        if re.match(pattern, filename_lower):
+            print(f"[DEBUG] Skipping file matching suspicious pattern '{pattern}': {filename}")
+            return False
+    
+    # Fourth check: Valid image extensions
+    valid_extensions = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".tiff", ".tif", ".bmp", ".dng", ".raw"]
+    extension = os.path.splitext(filename)[-1].lower()
+    
+    if extension not in valid_extensions:
+        print(f"[DEBUG] Skipping file with invalid extension '{extension}': {filename}")
+        return False
+    
+    # Fifth check: Minimum filename length (avoid single character files)
+    base_name = os.path.splitext(filename)[0]
+    if len(base_name) < 2:
+        print(f"[DEBUG] Skipping file with too short basename: {filename}")
+        return False
+    
+    # Sixth check: Avoid files with only numbers or special characters in name
+    if re.match(r'^[\d\-_\.]+$', base_name):
+        print(f"[DEBUG] Skipping file with suspicious name pattern: {filename}")
+        return False
+    
+    return True
+
+def is_valid_directory(dirname: str) -> bool:
+    """
+    Enhanced check for valid directories with comprehensive hidden directory filtering.
+    Filters out system directories, cache directories, and hidden folders.
+    """
+    if not dirname:
+        return False
+        
+    dirname_lower = dirname.lower()
+    
+    # First check: Exclude hidden directories (starting with dot)
+    if dirname.startswith('.'):
+        print(f"[DEBUG] Skipping hidden directory: {dirname}")
+        return False
+    
+    # Second check: Exclude system and cache directories
+    exclude_dir_patterns = [
+        # System directories (Windows)
+        'system volume information',
+        '$recycle.bin',
+        'recycler',
+        'windows',
+        'program files',
+        'program files (x86)',
+        'programdata',
+        'users',
+        
+        # System directories (macOS)
+        '.fseventsd',
+        '.spotlight-v100',
+        '.trashes',
+        '.volumeicon.icns',
+        '__macosx',
+        
+        # System directories (Linux/Unix)
+        'proc',
+        'sys',
+        'dev',
+        'etc',
+        'var',
+        'usr',
+        'bin',
+        'sbin',
+        'lib',
+        'lib64',
+        
+        # Cache and temporary directories
+        '.thumbnails',
+        'thumbnails',
+        'thumbs',
+        '.cache',
+        'cache',
+        'temp',
+        'tmp',
+        '.temp',
+        '.tmp',
+        
+        # Preview and processing directories
+        'preview',
+        'previews',
+        '.preview',
+        'processed',
+        '.processed',
+        'output',
+        '.output',
+        
+        # Version control directories
+        '.git',
+        '.svn',
+        '.hg',
+        '.bzr',
+        'cvs',
+        
+        # IDE and editor directories
+        '.vscode',
+        '.idea',
+        '__pycache__',
+        'node_modules',
+        '.vs',
+        
+        # Backup directories
+        'backup',
+        'backups',
+        '.backup',
+        '.bak',
+        
+        # Scanner software directories
+        'scantmp',
+        'scan_temp',
+        'scanner_cache',
+    ]
+    
+    # Check if directory name contains any excluded patterns
+    for pattern in exclude_dir_patterns:
+        if pattern in dirname_lower:
+            print(f"[DEBUG] Skipping directory with excluded pattern '{pattern}': {dirname}")
+            return False
+    
+    # Third check: Pattern matching for suspicious directory names
+    suspicious_dir_patterns = [
+        r'^\..*',           # Hidden directories (redundant but safe)
+        r'^_.*',            # Directories starting with underscore
+        r'^~.*',            # Temporary directories
+        r'.*~$',            # Backup directories
+        r'^temp_.*',        # Temporary directories
+        r'^cache_.*',       # Cache directories
+        r'^thumb.*',        # Thumbnail directories
+    ]
+    
+    for pattern in suspicious_dir_patterns:
+        if re.match(pattern, dirname_lower):
+            print(f"[DEBUG] Skipping directory matching suspicious pattern '{pattern}': {dirname}")
+            return False
+    
+    return True
+
 def create_header_mapping(csv_headers: List[str]) -> Dict[str, str]:
     """Create a mapping from actual CSV headers to canonical field names"""
     header_mapping = {}
@@ -188,51 +420,88 @@ def make_dpi_serializable(dpi_value):
         return "Unknown"
 
 def get_folder_structure(root_path):
+    """Get folder structure with enhanced filtering of hidden files and directories"""
     folder_structure = {"path": root_path, "files": [], "subfolders": []}
-    for root, dirs, files in os.walk(root_path):
-        current_folder = {"path": root, "files": [], "subfolders": []}
+    
+    try:
+        for root, dirs, files in os.walk(root_path):
+            current_folder = {"path": root, "files": [], "subfolders": []}
+            
+            # Filter out invalid directories in-place with detailed logging
+            original_dirs = dirs.copy()
+            dirs[:] = [d for d in dirs if is_valid_directory(d)]
+            filtered_out_dirs = set(original_dirs) - set(dirs)
+            if filtered_out_dirs:
+                print(f"[DEBUG] Filtered out directories: {filtered_out_dirs}")
 
-        for file in files:
-            file_path = os.path.join(root, file)
-            extension = os.path.splitext(file)[-1].lower()
-            file_info = {
-                "name": file,
-                "path": file_path,
-                "extension": extension,
-                "size": os.path.getsize(file_path),
-            }
+            # Process files with enhanced filtering
+            valid_files_count = 0
+            for file in files:
+                # Skip files that don't pass our enhanced validation
+                if not is_valid_image_file(file):
+                    continue
+                    
+                file_path = os.path.join(root, file)
+                
+                # Additional check: Skip if file is actually hidden (system attribute on Windows)
+                if os.name == 'nt':  # Windows
+                    import stat
+                    try:
+                        attrs = os.stat(file_path).st_file_attributes
+                        if attrs & stat.FILE_ATTRIBUTE_HIDDEN:
+                            print(f"[DEBUG] Skipping Windows hidden file: {file}")
+                            continue
+                    except (AttributeError, OSError):
+                        pass  # Ignore if we can't check attributes
+                
+                extension = os.path.splitext(file)[-1].lower()
+                file_info = {
+                    "name": file,
+                    "path": file_path,
+                    "extension": extension,
+                    "size": os.path.getsize(file_path),
+                }
 
-            if extension in [".jpg", ".png", ".jpeg", ".webp", ".gif", ".tiff", ".tif", ".dng"]:
+                # Only process files that PIL can successfully open
                 try:
                     with Image.open(file_path) as img:
                         file_info["resolution"] = img.size
                         dpi = img.info.get("dpi")
                         file_info["dpi"] = make_dpi_serializable(dpi)
                         file_info["color_depth"] = get_color_depth(img)
+                        
+                        # Add the file only if PIL can successfully open it
+                        current_folder["files"].append(file_info)
+                        valid_files_count += 1
+                        print(f"[DEBUG] Added valid image: {file}")
+                        
                 except Exception as e:
-                    file_info["error"] = str(e)
-                    file_info["resolution"] = None
-                    file_info["dpi"] = None
+                    print(f"[DEBUG] Skipping {file}: PIL error - {str(e)}")
+                    # Don't add files that can't be opened by PIL
 
-            current_folder["files"].append(file_info)
+            print(f"[DEBUG] Processed {valid_files_count} valid images in {root}")
 
-        for subdir in sorted(dirs, key=extract_trailing_number):
-            subfolder_path = os.path.join(root, subdir)
-            subfolder_data = get_folder_structure(subfolder_path)
-            current_folder["subfolders"].append(subfolder_data)
+            # Process valid subdirectories
+            valid_subdirs = [d for d in sorted(dirs, key=extract_trailing_number) if is_valid_directory(d)]
+            for subdir in valid_subdirs:
+                subfolder_path = os.path.join(root, subdir)
+                subfolder_data = get_folder_structure(subfolder_path)
+                current_folder["subfolders"].append(subfolder_data)
 
-        if root == root_path:
-            folder_structure = current_folder
+            if root == root_path:
+                folder_structure = current_folder
 
-    total_images = sum(
-        1 for f in folder_structure["files"]
-        if os.path.splitext(f["name"])[-1].lower() in
-        [".jpg", ".png", ".jpeg", ".webp", ".gif", ".tiff", ".tif", ".dng"]
-    )
-    for subfolder in folder_structure.get("subfolders", []):
-        total_images += subfolder.get("totalImages", 0)
+        # Count only valid images
+        total_images = len(folder_structure["files"])
+        for subfolder in folder_structure.get("subfolders", []):
+            total_images += subfolder.get("totalImages", 0)
 
-    return {**folder_structure, "totalImages": total_images}
+        print(f"[DEBUG] Total valid images found: {total_images}")
+        return {**folder_structure, "totalImages": total_images}
+        
+    except Exception as e:
+        print(f"[ERROR] Error processing folder structure for {root_path}: {str(e)}")
+        return {"path": root_path, "files": [], "subfolders": [], "totalImages": 0}
 
 def parse_grantha_info(grantha_text):
     """Parse grantha info and clean language text"""
@@ -303,10 +572,8 @@ def process_csv(app, csv_path, folders_base_path):
             subworks_with_images = []
 
             if folder_data:
-                for file_info in folder_data.get("files", []):
-                    ext = file_info.get("extension", "").lower()
-                    if ext in [".jpg", ".png", ".jpeg", ".webp", ".gif", ".tiff", ".tif", ".dng"]:
-                        main_grantha_images.append(file_info)
+                # All files in folder_data are already filtered, so we can use them directly
+                main_grantha_images = folder_data.get("files", [])
 
                 subfolders = folder_data.get("subfolders", [])
                 for i, subwork in enumerate(subworks_info):
@@ -315,11 +582,8 @@ def process_csv(app, csv_path, folders_base_path):
                         subfolder_name = os.path.basename(subfolder.get("path"))
                         subwork["folder_name"] = subfolder_name
                         subwork["grantha_id"] = f"{subfolder_name}"
-                        subwork_images = []
-                        for file_info in subfolder.get("files", []):
-                            ext = file_info.get("extension", "").lower()
-                            if ext in [".jpg", ".png", ".jpeg", ".webp", ".gif", ".tiff", ".tif", ".dng"]:
-                                subwork_images.append(file_info)
+                        # All files in subfolder are already filtered
+                        subwork_images = subfolder.get("files", [])
                         subwork["images"] = subwork_images
                         subwork["image_count"] = len(subwork_images)
                         subworks_with_images.append(subwork)
