@@ -41,7 +41,7 @@ type GranthaDeck = {
 
 const STITCH_TYPES = [
   { value: "stitch", label: "Stitch" },
-  { value: "non-stitch", label: "Non Stitch" },
+  { value: "non-stitch", label: "Non-Stitch" },
 ];
 
 export default function EditGranthaDeckPage({ params }: { params: { id: string } }) {

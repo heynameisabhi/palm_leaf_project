@@ -92,7 +92,7 @@ const page: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-folder-details`,
+        "http://localhost:8000/get-folder-details",
         {
           folder_path: folderPath,
         }

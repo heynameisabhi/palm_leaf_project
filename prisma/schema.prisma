@@ -1,3 +1,9 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -18,11 +24,12 @@ model GranthaDeck {
   total_images           Int?
   stitch_or_nonstitch    String?
   physical_condition     String?
-  user_id                String
-  createdAt              DateTime    @default(now())
-  updatedAt              DateTime    @updatedAt
   granthas               Grantha[]
+  user_id                String
   user                   UserAccount @relation(fields: [user_id], references: [user_id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Language {
@@ -42,17 +49,23 @@ model Author {
 }
 
 model Grantha {
-  grantha_id      String         @id
+  grantha_id      String         @id // default ids are not required here
   grantha_deck_id String
   grantha_name    String?
   language_id     String
   author_id       String
   description     String?
   remarks         String?
-  author          Author         @relation(fields: [author_id], references: [author_id], onDelete: Cascade)
   granthaDeck     GranthaDeck    @relation(fields: [grantha_deck_id], references: [grantha_deck_id], onDelete: Cascade)
   language        Language       @relation(fields: [language_id], references: [language_id], onDelete: Cascade)
+  author          Author         @relation(fields: [author_id], references: [author_id], onDelete: Cascade)
   scannedImages   ScannedImage[]
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+  SUSPENDED
 }
 
 model UserAccount {
@@ -63,13 +76,14 @@ model UserAccount {
   role                      String
   phone_no                  String?
   address                   String?
+  accessControls            AccessControl[]
   forgotPasswordToken       String?
   forgotPasswordTokenExpiry DateTime?
   status                    UserStatus      @default(ACTIVE) @map("status")
-  createdAt                 DateTime        @default(now())
-  updatedAt                 DateTime        @updatedAt
-  accessControls            AccessControl[]
   GranthaDeck               GranthaDeck[]
+
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
 }
 
 model AccessControl {
@@ -104,13 +118,8 @@ model ScanningProperties {
   scannedImage                 ScannedImage @relation(fields: [image_id], references: [image_id], onDelete: Cascade)
 }
 
+// This table is just used for storing names of scanner models
 model ScannerModel {
   id   String @id @default(uuid())
   name String
-}
-
-enum UserStatus {
-  ACTIVE
-  BLOCKED
-  SUSPENDED
 }

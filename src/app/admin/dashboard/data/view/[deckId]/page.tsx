@@ -150,7 +150,7 @@ export default function GranthaDeckDetailView() {
                   <p className="text-zinc-100 mt-1">{deck.total_images || "Not specified"}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-zinc-400">Stitch or Non Stitch</h3>
+                  <h3 className="text-sm font-medium text-zinc-400">Stitch or Non-Stitch</h3>
                   <p className="text-zinc-100 mt-1">{deck.stitch_or_nonstitch || "Not specified"}</p>
                 </div>
               </div>

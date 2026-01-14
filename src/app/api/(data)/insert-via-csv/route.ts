@@ -91,12 +91,21 @@ export async function POST(request: NextRequest) {
     // Read and parse each CSV file
     const csvContents = await Promise.all(files.map((file) => file.text()));
 
-    // Parse all files with columns=true
-    let parsedFiles: Array<any[]> = [];
+    let granthaData, granthaDeckData, scannedImagesData;
+
     try {
-      parsedFiles = csvContents.map((content) =>
-        parse(content, { columns: true, skip_empty_lines: true })
-      );
+      granthaData = parse(csvContents[0], {
+        columns: true,
+        skip_empty_lines: true,
+      });
+      granthaDeckData = parse(csvContents[1], {
+        columns: true,
+        skip_empty_lines: true,
+      });
+      scannedImagesData = parse(csvContents[2], {
+        columns: true,
+        skip_empty_lines: true,
+      });
     } catch (error) {
       console.error("Error parsing CSV files:", error);
       return NextResponse.json(
@@ -105,123 +114,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Helper to check presence of required columns in a parsed row (case-insensitive)
-    const hasColumns = (row: Record<string, any>, required: string[]) => {
-      const keys = Object.keys(row).map((k) => k.trim().toLowerCase());
-      return required.every((col) => keys.includes(col.toLowerCase()));
-    };
-
-    // Required columns for each CSV type
-    const GRANHTA_REQUIRED = ["grantha_id", "author", "language"];
-    const DECK_REQUIRED = ["grantha_deck_id", "grantha_deck_name"];
-    const SCANNED_REQUIRED = ["image_name", "image_url", "grantha_id"];
-
-    // Identify the files by their headers since relying on filenames/order is fragile
-    let granthaData: any[] | undefined;
-    let granthaDeckData: any[] | undefined;
-    let scannedImagesData: any[] | undefined;
-
-    for (const rows of parsedFiles) {
-      if (!rows || rows.length === 0) continue;
-      const firstRow = rows[0];
-
-      if (!granthaData && hasColumns(firstRow, GRANHTA_REQUIRED)) {
-        granthaData = rows;
-        continue;
-      }
-
-      if (!granthaDeckData && hasColumns(firstRow, DECK_REQUIRED)) {
-        granthaDeckData = rows;
-        continue;
-      }
-
-      if (!scannedImagesData && hasColumns(firstRow, SCANNED_REQUIRED)) {
-        scannedImagesData = rows;
-        continue;
-      }
-    }
-
-    // If any file could not be identified, return a helpful error
-    if (!granthaData || !granthaDeckData || !scannedImagesData) {
-      const headersList = parsedFiles.map((rows) =>
-        rows && rows.length > 0 ? Object.keys(rows[0]).join(", ") : "(empty)"
-      );
-
-      return NextResponse.json(
-        {
-          error:
-            "Could not identify uploaded CSV files. Ensure you uploaded three CSVs with headers: \n" +
-            `Grantha required headers: ${GRANHTA_REQUIRED.join(", ")}\n` +
-            `GranthaDeck required headers: ${DECK_REQUIRED.join(", ")}\n` +
-            `ScannedImage required headers: ${SCANNED_REQUIRED.join(", ")}\n` +
-            `Detected headers per file: ${headersList.join(" | ")}`,
-        },
-        { status: 400 }
-      );
-    }
-
-    // Validate non-empty rows in each parsed file
-    if (!granthaDeckData.length || !granthaData.length || !scannedImagesData.length) {
-      return NextResponse.json(
-        { error: "One or more CSV files are empty" },
-        { status: 400 }
-      );
-    }
-
-    // Validate each grantha row has required fields (allow missing author/language by defaulting)
-    for (const grantha of granthaData) {
-      if (!String(grantha.grantha_id || "").trim()) {
-        return NextResponse.json(
-          {
-            error:
-              "Missing required field 'grantha_id' in Grantha CSV. Each row must include: grantha_id. Please check your Grantha CSV.",
-            row: grantha,
-          },
-          { status: 400 }
-        );
-      }
-
-      // Default missing author/language to 'Unknown' and continue
-      if (!String(grantha.author || "").trim()) {
-        console.warn(`Grantha ${grantha.grantha_id} missing author. Defaulting to 'Unknown'.`);
-        grantha.author = "Unknown";
-      }
-
-      if (!String(grantha.language || "").trim()) {
-        console.warn(`Grantha ${grantha.grantha_id} missing language. Defaulting to 'Unknown'.`);
-        grantha.language = "Unknown";
-      }
-    }
-
-    // Validate each scanned image row has required fields
-    for (const image of scannedImagesData) {
-      if (
-        !String(image.image_name || "").trim() ||
-        !String(image.image_url || "").trim() ||
-        !String(image.grantha_id || "").trim()
-      ) {
-        return NextResponse.json(
-          {
-            error:
-              "Missing required fields in ScannedImage CSV. Each row must include: image_name, image_url, grantha_id. Please check your ScannedImage CSV.",
-            row: image,
-          },
-          { status: 400 }
-        );
-      }
-    }
-
-    // Validate deck row has required fields
+    // Validate that we have at least one row in each CSV
     if (
-      !String(granthaDeckData[0].grantha_deck_id || "").trim() ||
-      !String(granthaDeckData[0].grantha_deck_name || "").trim()
+      !granthaDeckData?.length ||
+      !granthaData?.length ||
+      !scannedImagesData?.length
     ) {
       return NextResponse.json(
-        {
-          error:
-            "Missing required fields in GranthaDeck CSV. The first row must include: grantha_deck_id, grantha_deck_name. Please check your GranthaDeck CSV.",
-          row: granthaDeckData[0],
-        },
+        { error: "One or more CSV files are empty" },
         { status: 400 }
       );
     }
@@ -274,11 +174,7 @@ export async function POST(request: NextRequest) {
             });
 
             if (!author) {
-              // If the author doesn't exist, create a placeholder author automatically
-              author = await tx.author.create({
-                data: { author_name: grantha.author },
-              });
-              console.log(`Created new author: ${grantha.author}`);
+              throw new Error(`Author ${grantha.author} not found!`);
             }
 
             // Check if the language is already present using cleaned language

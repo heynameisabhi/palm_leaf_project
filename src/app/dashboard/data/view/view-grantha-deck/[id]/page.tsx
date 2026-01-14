@@ -360,7 +360,7 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
                 <span className="text-xs font-medium text-zinc-400">Stitch Type:</span>
                 <span className="text-sm text-zinc-300">
                   {deck.stitch_or_nonstitch ? 
-                    (deck.stitch_or_nonstitch === "stitch" ? "Stitch" : "Non Stitch") : 
+                    (deck.stitch_or_nonstitch === "stitch" ? "Stitch" : "Non-Stitch") : 
                     "Not specified"}
                 </span>
               </div>
