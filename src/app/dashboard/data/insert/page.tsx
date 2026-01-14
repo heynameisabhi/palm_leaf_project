@@ -108,7 +108,7 @@ const page: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:8000/get-folder-details",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-folder-details`,
         {
           folder_path: folderPath,
         }
@@ -417,7 +417,7 @@ const page: React.FC = () => {
                 className="w-full bg-[#121212] border-[#1a1a1a] text-white rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500"
               >
                 <option value="stitch">Stitch</option>
-                <option value="non-stitch">Non-Stitch</option>
+                <option value="non-stitch">Non Stitch</option>
               </select>
             </div>
 

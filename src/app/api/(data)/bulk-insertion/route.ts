@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     try {
       // Process the CSV file using the Python backend
       const pythonResponse = await axios.post(
-        "http://localhost:8000/process-csv",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/process-csv`,
         {
           csv_file_path: csvFilePath,
           folders_base_path: foldersBasePath,

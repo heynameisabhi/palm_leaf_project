@@ -285,7 +285,7 @@ export default function EditGranthaDeck() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="stitch_or_nonstitch" className="text-zinc-400">
-                      Stitch or Non-Stitch
+                      Stitch or Non Stitch
                       {deck?.stitch_or_nonstitch && (
                         <span className="text-zinc-500 ml-2">
                           (Current: {deck.stitch_or_nonstitch})

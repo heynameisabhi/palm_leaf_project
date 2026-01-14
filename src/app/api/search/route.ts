@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // Type definitions
 interface SearchFilters {
   q?: string;
+  deckId?: string;
   deckName?: string;
   ownerName?: string;
   lengthMin?: string;
@@ -36,6 +37,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const { searchParams } = new URL(request.url);
     const filters: SearchFilters = {
       q: searchParams.get('q') || undefined,
+      deckId: searchParams.get('deckId') || undefined,
       deckName: searchParams.get('deckName') || undefined,
       ownerName: searchParams.get('ownerName') || undefined,
       lengthMin: searchParams.get('lengthMin') || undefined,
@@ -99,9 +101,10 @@ async function searchDecks(filters: SearchFilters) {
   const whereConditions: any = {};
   const orConditions: any[] = [];
 
-  // Main text search across multiple fields
+  // Main text search across multiple fields (include deck id)
   if (filters.q) {
     orConditions.push(
+      { grantha_deck_id: { contains: filters.q, mode: 'insensitive' } },
       { grantha_deck_name: { contains: filters.q, mode: 'insensitive' } },
       { grantha_owner_name: { contains: filters.q, mode: 'insensitive' } },
       { physical_condition: { contains: filters.q, mode: 'insensitive' } },
@@ -121,6 +124,11 @@ async function searchDecks(filters: SearchFilters) {
   }
 
   // Specific field filters
+  if (filters.deckId) {
+    // allow searching by deck id specifically as a contains match
+    whereConditions.grantha_deck_id = { contains: filters.deckId, mode: 'insensitive' };
+  }
+
   if (filters.deckName) {
     whereConditions.grantha_deck_name = { contains: filters.deckName, mode: 'insensitive' };
   }
@@ -244,6 +252,7 @@ async function searchGranthas(filters: SearchFilters) {
       { author: { author_name: { contains: filters.q, mode: 'insensitive' } } },
       { author: { scribe_name: { contains: filters.q, mode: 'insensitive' } } },
       { language: { language_name: { contains: filters.q, mode: 'insensitive' } } },
+      { granthaDeck: { grantha_deck_id: { contains: filters.q, mode: 'insensitive' } } },
       { granthaDeck: { grantha_deck_name: { contains: filters.q, mode: 'insensitive' } } },
       { granthaDeck: { grantha_owner_name: { contains: filters.q, mode: 'insensitive' } } }
     );
@@ -269,6 +278,10 @@ async function searchGranthas(filters: SearchFilters) {
     
     const deckFilters: any = {};
     
+    if (filters.deckId) {
+      deckFilters.grantha_deck_id = { contains: filters.deckId, mode: 'insensitive' };
+    }
+
     if (filters.deckName) {
       deckFilters.grantha_deck_name = { contains: filters.deckName, mode: 'insensitive' };
     }

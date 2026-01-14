@@ -54,7 +54,12 @@ export default function CsvUploader() {
 
   const handleUpload = async () => {
     if (!selectedFiles || selectedFiles.length === 0) {
-      toast.error("Please select at least one CSV file.")
+      toast.error("Please select exactly 3 CSV files (Grantha, GranthaDeck, ScannedImageAndProperties).")
+      return
+    }
+
+    if (selectedFiles.length !== 3) {
+      toast.error("Please select exactly 3 CSV files. You currently have " + selectedFiles.length + ".")
       return
     }
 
@@ -65,18 +70,23 @@ export default function CsvUploader() {
     })
 
     try {
-      const response = await axios.post("/api/insert-via-csv", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
+      // Don't set Content-Type header manually; let the browser set the boundary
+      const response = await axios.post("/api/insert-via-csv", formData)
 
       console.log("Response from the Backend API route: ", response.data)
       toast.success("Data inserted successfully and temporary CSV files have been cleaned up.")
       setSelectedFiles(null)
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error uploading files:", error)
-      toast.error("Failed to upload files. Please try again.")
+
+      // Surface backend error message when available
+      if (axios.isAxiosError(error) && error.response?.data?.error) {
+        toast.error(String(error.response.data.error))
+      } else if (error instanceof Error) {
+        toast.error(error.message)
+      } else {
+        toast.error("Failed to upload files. Please try again.")
+      }
     } finally {
       setIsUploading(false)
     }

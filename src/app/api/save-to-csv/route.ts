@@ -40,20 +40,34 @@ export async function POST(request: NextRequest) {
         const userScannedImageFile = `ScannedImageAndProperties_${userId}.csv`;
         
         // 1. GranthaDeck.csv
+        const formatStitchType = (s: string | undefined) => {
+            if (!s) return "";
+            return s.replace(/-/g, " ")
+                    .split(" ")
+                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                    .join(" ");
+        };
+
+        const unknownIfEmpty = (v: any) => {
+            if (v === null || v === undefined) return "Unknown";
+            const s = String(v).trim();
+            return s === "" ? "Unknown" : v;
+        };
+
         const granthaDeckData = [{
             grantha_deck_id: granthaDeckId,
-            total_leaves: totalLeaves,
-            total_images: totalImages,
+            total_leaves: unknownIfEmpty(totalLeaves),
+            total_images: unknownIfEmpty(totalImages),
 
             // this field need not be filled here
             // created_by: userId,
-            stitch_or_nonstitch: stitchType,
-            physical_condition: physicalCondition,
-            grantha_deck_name: "", 
-            grantha_owner_name: "", 
-            grantha_source_address: "", 
-            length_in_cms: "", 
-            width_in_cms: "", 
+            stitch_or_nonstitch: unknownIfEmpty(formatStitchType(stitchType)),
+            physical_condition: unknownIfEmpty(physicalCondition),
+            grantha_deck_name: unknownIfEmpty(""), 
+            grantha_owner_name: unknownIfEmpty(""), 
+            grantha_source_address: unknownIfEmpty(""), 
+            length_in_cms: unknownIfEmpty(""), 
+            width_in_cms: unknownIfEmpty(""), 
         }];
         fs.writeFileSync(path.join(outputDir, userGranthaDeckFile), parse(granthaDeckData));
         
@@ -66,20 +80,20 @@ export async function POST(request: NextRequest) {
 
                 // this is not required to be filled
                 // created_by: userId,
-                grantha_name: "", 
-                language: "", 
-                author: "", 
-                remarks: "", 
-                description: "", 
+                grantha_name: unknownIfEmpty(""), 
+                language: unknownIfEmpty(""), 
+                author: unknownIfEmpty(""), 
+                remarks: unknownIfEmpty(""), 
+                description: unknownIfEmpty(""), 
             },
             ...subGranthas.map((sub: any) => ({
                 grantha_id: sub.subgrantha_name,
                 // created_by: userId,
-                grantha_name: "", 
-                language: "", 
-                author: "", 
-                remarks: "", 
-                description: "", 
+                grantha_name: unknownIfEmpty(""), 
+                language: unknownIfEmpty(""), 
+                author: unknownIfEmpty(""), 
+                remarks: unknownIfEmpty(""), 
+                description: unknownIfEmpty(""), 
             }))
         ];
         fs.writeFileSync(path.join(outputDir, userGranthaFile), parse(granthaData));
@@ -96,15 +110,15 @@ export async function POST(request: NextRequest) {
                 grantha_id: `${granthaDeckId}_main_grantha`,
                 file_format: img.extension.replace(".", "").toUpperCase(),
                 resolution_dpi: Array.isArray(img.dpi) ? img.dpi.map(Math.round).join("x") : "Unknown",
-                horizontal_or_vertical_scan: scanType,
+                horizontal_or_vertical_scan: unknownIfEmpty(scanType),
                 // created_by: userId,
-                scanner_model: scannerModel, 
-                worked_by: "", 
-                lighting_conditions: "", 
-                color_depth: "", 
-                scanning_start_date: "", 
-                scanning_completed_date: "", 
-                post_scanning_completed_date: "", 
+                scanner_model: unknownIfEmpty(scannerModel), 
+                worked_by: unknownIfEmpty(""), 
+                lighting_conditions: unknownIfEmpty(""), 
+                color_depth: unknownIfEmpty(""), 
+                scanning_start_date: unknownIfEmpty(""), 
+                scanning_completed_date: unknownIfEmpty(""), 
+                post_scanning_completed_date: unknownIfEmpty(""),
             })),
             ...subGranthas.flatMap((sub: any) =>
                 sub.images.map((img: any) => ({
