@@ -3,6 +3,19 @@ import { getAuthSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import fetch from "node-fetch";
+
+async function loadFontBinString(): Promise<string> {
+    const font = await fetch(process.env.NOTO_SANS_FONT_PATH || 'http://localhost:3000/NotoSans.ttf');
+    const arrayBuffer = await font.arrayBuffer();
+    let binaryString = '';
+    const bytes = new Uint8Array(arrayBuffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binaryString += String.fromCharCode(bytes[i]);
+    }
+    return binaryString;
+}
 
 interface ReportOptions {
     // Deck Information
@@ -170,6 +183,11 @@ export async function POST(request: Request) {
 
         // Create PDF
         const doc = new jsPDF();
+
+        const fontData: string = await loadFontBinString();
+        doc.addFileToVFS("NotoSans.ttf", fontData);
+        doc.addFont("NotoSans.ttf", "NotoSans", "normal");
+        doc.setFont("NotoSans");
         
         // Add title
         doc.setFontSize(20);
