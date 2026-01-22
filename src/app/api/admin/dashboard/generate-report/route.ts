@@ -3,18 +3,30 @@ import { getAuthSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import fetch from "node-fetch";
 
 async function loadFontBinString(): Promise<string> {
-    const font = await fetch(process.env.NOTO_SANS_FONT_PATH || 'http://localhost:3000/NotoSans.ttf');
-    const arrayBuffer = await font.arrayBuffer();
-    let binaryString = '';
-    const bytes = new Uint8Array(arrayBuffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-        binaryString += String.fromCharCode(bytes[i]);
+    // Fetch Noto Sans Devanagari font from a reliable CDN
+    const fontUrl = 'https://github.com/google/fonts/raw/main/ofl/notosansdevanagari/NotoSansDevanagari%5Bwdth%2Cwght%5D.ttf';
+
+    try {
+        const response = await fetch(fontUrl);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch font: ${response.statusText}`);
+        }
+
+        const arrayBuffer = await response.arrayBuffer();
+        let binaryString = '';
+        const bytes = new Uint8Array(arrayBuffer);
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+            binaryString += String.fromCharCode(bytes[i]);
+        }
+        return binaryString;
+    } catch (error) {
+        console.error('Error loading Devanagari font:', error);
+        // Fallback to default font if loading fails
+        throw error;
     }
-    return binaryString;
 }
 
 interface ReportOptions {
@@ -22,25 +34,26 @@ interface ReportOptions {
     deckBasicInfo: boolean;
     deckPhysicalProperties: boolean;
     deckCreationDetails: boolean;
-    
+
     // User Information
     userBasicInfo: boolean;
     userContactInfo: boolean;
     userPermissions: boolean;
-    
+
     // Grantha Content
     granthaBasicInfo: boolean;
     granthaDescriptions: boolean;
-    
+
     // Author & Language
     authorDetails: boolean;
+    authorBio: boolean;
     languageInfo: boolean;
-    
+
     // Image Information
     imageCount: boolean;
     imageDetails: boolean;
     scanningProperties: boolean;
-    
+
     // Additional Options
     statisticalSummary: boolean;
     exportMetadata: boolean;
@@ -118,7 +131,7 @@ export async function POST(request: Request) {
         // Calculate date range based on timeRange
         const now = new Date();
         let startDate: Date | undefined;
-        
+
         switch (timeRange) {
             case "week":
                 startDate = new Date(now.setDate(now.getDate() - 7));
@@ -152,7 +165,15 @@ export async function POST(request: Request) {
             },
             granthas: {
                 include: {
-                    author: reportOptions.authorDetails,
+                    author: reportOptions.authorDetails ? {
+                        select: {
+                            author_name: true,
+                            birth_year: true,
+                            death_year: true,
+                            bio: true,
+                            scribe_name: true
+                        }
+                    } : false,
                     language: reportOptions.languageInfo,
                     scannedImages: (reportOptions.imageCount || reportOptions.imageDetails || reportOptions.scanningProperties) ? {
                         include: {
@@ -185,14 +206,14 @@ export async function POST(request: Request) {
         const doc = new jsPDF();
 
         const fontData: string = await loadFontBinString();
-        doc.addFileToVFS("NotoSans.ttf", fontData);
-        doc.addFont("NotoSans.ttf", "NotoSans", "normal");
-        doc.setFont("NotoSans");
-        
+        doc.addFileToVFS("NotoSansDevanagari.ttf", fontData);
+        doc.addFont("NotoSansDevanagari.ttf", "NotoSansDevanagari", "normal");
+        doc.setFont("NotoSansDevanagari");
+
         // Add title
         doc.setFontSize(20);
         doc.text("Grantha Records Report", 105, 20, { align: "center" });
-        
+
         // Add metadata if requested
         if (reportOptions.exportMetadata) {
             doc.setFontSize(10);
@@ -211,8 +232,8 @@ export async function POST(request: Request) {
 
             const totalDecks = granthaDecks.length;
             const totalGranthas = granthaDecks.reduce((sum, deck) => sum + (deck.granthas?.length || 0), 0);
-            const totalImages = granthaDecks.reduce((sum, deck) => 
-                sum + (deck.granthas?.reduce((imgSum, grantha) => 
+            const totalImages = granthaDecks.reduce((sum, deck) =>
+                sum + (deck.granthas?.reduce((imgSum, grantha) =>
                     imgSum + (grantha.scannedImages && Array.isArray(grantha.scannedImages) ? grantha.scannedImages.length : 0), 0) || 0), 0);
 
             doc.setFontSize(10);
@@ -293,13 +314,13 @@ export async function POST(request: Request) {
                 doc.setFontSize(12);
                 doc.text("User Information:", 14, yPosition);
                 yPosition += 7;
-                
+
                 if (reportOptions.userBasicInfo) {
                     doc.setFontSize(10);
                     doc.text(`User: ${deck.user.user_name} (${deck.user.email})`, 18, yPosition);
                     yPosition += 5;
                 }
-                
+
                 if (reportOptions.userContactInfo) {
                     if (deck.user.phone_no) {
                         doc.text(`Phone: ${deck.user.phone_no}`, 18, yPosition);
@@ -310,7 +331,7 @@ export async function POST(request: Request) {
                         yPosition += 5;
                     }
                 }
-                
+
                 if (reportOptions.userPermissions) {
                     doc.text(`Role: ${deck.user.role}`, 18, yPosition);
                     yPosition += 5;
@@ -324,10 +345,10 @@ export async function POST(request: Request) {
 
             // Grantha information
             if (deck.granthas && deck.granthas.length > 0) {
-                if (reportOptions.granthaBasicInfo || reportOptions.granthaDescriptions || 
-                    reportOptions.authorDetails || reportOptions.languageInfo || 
+                if (reportOptions.granthaBasicInfo || reportOptions.granthaDescriptions ||
+                    reportOptions.authorDetails || reportOptions.languageInfo ||
                     reportOptions.imageCount || reportOptions.imageDetails || reportOptions.scanningProperties) {
-                    
+
                     doc.setFontSize(12);
                     doc.text(`Granthas (${deck.granthas.length}):`, 14, yPosition);
                     yPosition += 10;
@@ -400,8 +421,8 @@ export async function POST(request: Request) {
                         head: [tableHeaders],
                         body: tableData,
                         theme: 'grid',
-                        headStyles: { fillColor: [41, 128, 185], textColor: 255 },
-                        styles: { fontSize: 8, cellPadding: 2 },
+                        headStyles: { fillColor: [41, 128, 185], textColor: 255, font: 'NotoSansDevanagari' },
+                        styles: { fontSize: 8, cellPadding: 2, font: 'NotoSansDevanagari' },
                         columnStyles: columnStyles
                     });
 
@@ -411,8 +432,8 @@ export async function POST(request: Request) {
                     if (reportOptions.authorDetails) {
                         const uniqueAuthors = deck.granthas
                             .map(g => g.author)
-                            .filter((author, index, self) => 
-                                author && typeof author === 'object' && 
+                            .filter((author, index, self) =>
+                                author && typeof author === 'object' &&
                                 self.findIndex(a => a && typeof a === 'object' && a.author_name === author.author_name) === index
                             ) as Array<{
                                 author_name: string | null;
@@ -421,6 +442,7 @@ export async function POST(request: Request) {
                                 bio: string | null;
                                 scribe_name: string | null;
                             }>;
+
 
                         if (uniqueAuthors.length > 0) {
                             doc.setFontSize(11);
@@ -431,19 +453,19 @@ export async function POST(request: Request) {
                                 doc.setFontSize(9);
                                 doc.text(`• ${author.author_name || 'Unknown'}`, 18, yPosition);
                                 yPosition += 4;
-                                
+
                                 if (author.birth_year || author.death_year) {
                                     const years = `${author.birth_year || '?'} - ${author.death_year || '?'}`;
                                     doc.text(`  Years: ${years}`, 22, yPosition);
                                     yPosition += 4;
                                 }
-                                
+
                                 if (author.scribe_name) {
                                     doc.text(`  Scribe: ${author.scribe_name}`, 22, yPosition);
                                     yPosition += 4;
                                 }
-                                
-                                if (author.bio) {
+
+                                if (author.bio && reportOptions.authorBio) {
                                     const bioLines = doc.splitTextToSize(`  Bio: ${author.bio}`, 170);
                                     doc.text(bioLines, 22, yPosition);
                                     yPosition += bioLines.length * 4;
@@ -455,10 +477,10 @@ export async function POST(request: Request) {
 
                     // Detailed image information if requested
                     if (reportOptions.imageDetails || reportOptions.scanningProperties) {
-                        const allImages = deck.granthas.flatMap(g => 
+                        const allImages = deck.granthas.flatMap(g =>
                             g.scannedImages && Array.isArray(g.scannedImages) ? g.scannedImages : []
                         );
-                        
+
                         if (allImages.length > 0) {
                             doc.setFontSize(11);
                             doc.text("Image Details:", 14, yPosition);
@@ -506,8 +528,8 @@ export async function POST(request: Request) {
                                 head: [imageHeaders],
                                 body: imageTableData,
                                 theme: 'grid',
-                                headStyles: { fillColor: [52, 152, 219], textColor: 255 },
-                                styles: { fontSize: 7, cellPadding: 1 },
+                                headStyles: { fillColor: [52, 152, 219], textColor: 255, font: 'NotoSansDevanagari' },
+                                styles: { fontSize: 7, cellPadding: 1, font: 'NotoSansDevanagari' },
                                 columnStyles: imageColumnStyles
                             });
 
