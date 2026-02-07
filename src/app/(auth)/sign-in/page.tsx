@@ -1,9 +1,9 @@
 import { SignInForm } from '@/components/SignInForm'
 import { FC } from 'react'
 
-interface pageProps {}
+interface pageProps { }
 
-const page: FC<pageProps> = ({}) => {
+const page: FC<pageProps> = ({ }) => {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gradient-to-br from-black via-black to-emerald-950">
       <div className="w-full max-w-md relative">

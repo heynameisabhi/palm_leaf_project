@@ -23,6 +23,7 @@ import {
 import Link from "next/link";
 
 interface SearchFilters {
+  deckId?: string;
   deckName?: string;
   ownerName?: string;
   lengthMin?: number;
@@ -445,11 +446,11 @@ const ManualManuscriptSearch: React.FC = () => {
               value: grantha.language.language_name,
             },
             grantha.scannedImages &&
-              grantha.scannedImages.length > 0 && {
-                icon: FileText,
-                label: "Scanned Images",
-                value: grantha.scannedImages.length.toString(),
-              },
+            grantha.scannedImages.length > 0 && {
+              icon: FileText,
+              label: "Scanned Images",
+              value: grantha.scannedImages.length.toString(),
+            },
           ]
             .filter(Boolean)
             .map((item, index) => (
@@ -640,7 +641,7 @@ const ManualManuscriptSearch: React.FC = () => {
                   </div>
                   <input
                     type="text"
-                    placeholder="Search granthas, authors, languages, or grantha decks..."
+                    placeholder="Search by deck ID, grantha name, author, language, or deck name..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 text-base bg-zinc-900 border border-zinc-800 rounded-xl focus:ring-2 focus:ring-green-700 focus:border-green-700 text-white placeholder-zinc-500 transition-all duration-300"
@@ -657,11 +658,10 @@ const ManualManuscriptSearch: React.FC = () => {
                     <button
                       key={type.value}
                       onClick={() => updateFilter("searchType", type.value)}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                        filters.searchType === type.value
-                          ? "bg-gradient-to-r from-green-950 to-green-600 text-white"
-                          : "bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border border-zinc-800"
-                      }`}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${filters.searchType === type.value
+                        ? "bg-gradient-to-r from-green-950 to-green-600 text-white"
+                        : "bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border border-zinc-800"
+                        }`}
                     >
                       {type.label}
                     </button>
@@ -725,6 +725,20 @@ const ManualManuscriptSearch: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* Deck ID */}
+                  <div>
+                    <label className="block text-sm font-medium text-green-500 mb-2">
+                      Grantha Deck ID
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter deck ID"
+                      value={filters.deckId || ""}
+                      onChange={(e) => updateFilter("deckId", e.target.value)}
+                      className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700 transition-all duration-300"
+                    />
+                  </div>
+
                   {/* Deck Name */}
                   <div>
                     <label className="block text-sm font-medium text-green-500 mb-2">
@@ -851,7 +865,7 @@ const ManualManuscriptSearch: React.FC = () => {
                     >
                       <option value="">All Types</option>
                       <option value="stitch">Stitched</option>
-                      <option value="non-stitch">Non-stitched</option>
+                      <option value="non stitch">Non Stitch</option>
                     </select>
                   </div>
 
@@ -998,7 +1012,7 @@ const ManualManuscriptSearch: React.FC = () => {
               </div>
 
               {results.length === 0 &&
-              (searchQuery || activeFiltersCount > 0) ? (
+                (searchQuery || activeFiltersCount > 0) ? (
                 <div className="text-center py-16 bg-black rounded-2xl border border-zinc-800">
                   <div className="inline-block mb-6 p-6 bg-gradient-to-r from-green-950 to-green-600 rounded-full">
                     <Book className="w-12 h-12 text-white" />

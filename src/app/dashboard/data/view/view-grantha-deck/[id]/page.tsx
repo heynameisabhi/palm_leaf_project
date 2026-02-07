@@ -98,11 +98,11 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
   const router = useRouter();
   const { data: session } = useSession();
   const [viewMode, setViewMode] = useState<"grid" | "table">("table");
-  
+
   // Delete deck modal states
   const [isDeckDeleteModalOpen, setIsDeckDeleteModalOpen] = useState(false);
   const [isDeletingDeck, setIsDeletingDeck] = useState(false);
-  
+
   // Delete grantha modal states
   const [isGranthaDeleteModalOpen, setIsGranthaDeleteModalOpen] = useState(false);
   const [granthaToDelete, setGranthaToDelete] = useState<Grantha | null>(null);
@@ -132,13 +132,13 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
     setIsDeletingDeck(true);
     try {
       await axios.delete(`/api/user/delete-records/${deckId}`);
-      
+
       setIsDeckDeleteModalOpen(false);
       toast.success(`Deck deleted successfully.`);
-      
+
       // Navigate back to the deck list or dashboard
       router.push('/dashboard/data/view');
-      
+
     } catch (error) {
       console.error("Error deleting deck:", error);
       toast.error(`Failed to delete deck. Please try again.`);
@@ -162,10 +162,10 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
     setIsDeletingGrantha(true);
     try {
       const response = await axios.delete(`/api/user/delete-grantha/${granthaToDelete.grantha_id}`);
-      
+
       // Refresh the data after successful deletion
       await refetch();
-      
+
       // Close modal and reset state
       setIsGranthaDeleteModalOpen(false);
       setGranthaToDelete(null);
@@ -175,7 +175,7 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
       toast.success(
         `Grantha "${deletedData.name || granthaToDelete.grantha_name || granthaToDelete.grantha_id.substring(0, 8)}" deleted successfully. ${deletedData.deletedImagesCount > 0 ? `${deletedData.deletedImagesCount} associated images were also deleted.` : ''}`
       );
-      
+
     } catch (error) {
       console.error("Error deleting grantha:", error);
       if (axios.isAxiosError(error)) {
@@ -220,14 +220,14 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
                   </div>
                 ))}
               </div>
-              
+
               <div className="mt-8">
                 <Skeleton className="h-7 w-48 bg-zinc-800 mb-4" />
                 <div className="flex justify-between items-center mb-4">
                   <Skeleton className="h-4 w-32 bg-zinc-800" />
                   <Skeleton className="h-8 w-32 bg-zinc-800" />
                 </div>
-                
+
                 <div className="grid grid-cols-1 gap-4">
                   {Array.from({ length: 3 }).map((_, i) => (
                     <Skeleton key={i} className="h-16 w-full bg-zinc-800" />
@@ -321,19 +321,19 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
                 <span className="text-xs font-medium text-zinc-400">ID:</span>
                 <span className="text-sm text-zinc-300">{deck.grantha_deck_id}</span>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-zinc-500" />
                 <span className="text-xs font-medium text-zinc-400">Owner:</span>
                 <span className="text-sm text-zinc-300">{deck.grantha_owner_name || "Not specified"}</span>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-zinc-500" />
                 <span className="text-xs font-medium text-zinc-400">Source Address:</span>
                 <span className="text-sm text-zinc-300">{deck.grantha_source_address || "Not specified"}</span>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <Ruler className="h-4 w-4 text-zinc-500" />
                 <span className="text-xs font-medium text-zinc-400">Dimensions:</span>
@@ -342,66 +342,65 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
                   {deck.width_in_cms ? `${deck.width_in_cms} cm` : "Not specified"}
                 </span>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4 text-zinc-500" />
                 <span className="text-xs font-medium text-zinc-400">Total Leaves:</span>
                 <span className="text-sm text-zinc-300">{deck.total_leaves || "Not specified"}</span>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <Image className="h-4 w-4 text-zinc-500" />
                 <span className="text-xs font-medium text-zinc-400">Total Images:</span>
                 <span className="text-sm text-zinc-300">{deck.total_images || "Not specified"}</span>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-zinc-500" />
                 <span className="text-xs font-medium text-zinc-400">Stitch Type:</span>
                 <span className="text-sm text-zinc-300">
-                  {deck.stitch_or_nonstitch ? 
-                    (deck.stitch_or_nonstitch === "stitch" ? "Stitch" : "Non-Stitch") : 
+                  {deck.stitch_or_nonstitch ?
+                    (deck.stitch_or_nonstitch === "stitch" ? "Stitch" : "Non Stitch") :
                     "Not specified"}
                 </span>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-zinc-500" />
                 <span className="text-xs font-medium text-zinc-400">Physical Condition:</span>
                 <span className="text-sm text-zinc-300">{deck.physical_condition || "Not specified"}</span>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-zinc-500" />
                 <span className="text-xs font-medium text-zinc-400">Added By:</span>
                 <span className="text-sm text-zinc-300">{deck.user?.user_name || deck.user_id}</span>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <CalendarDays className="h-4 w-4 text-zinc-500" />
                 <span className="text-xs font-medium text-zinc-400">Created At:</span>
                 <span className="text-sm text-zinc-300">{new Date(deck.createdAt).toLocaleString()}</span>
               </div>
             </div>
-            
+
             <div className="mt-6">
               <h3 className="text-lg font-medium text-zinc-200 mb-4">Associated Granthas</h3>
-              
+
               <div className="flex justify-between items-center mb-4">
                 <p className="text-sm text-zinc-400">
                   Total: {deck._count?.granthas || 0} granthas
                 </p>
-                
+
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setViewMode("table")}
-                    className={`bg-zinc-900 hover:bg-zinc-700 hover:text-white cursor-pointer border-zinc-700 h-8 ${
-                      viewMode === "table" 
-                        ? "bg-white text-black" 
+                    className={`bg-zinc-900 hover:bg-zinc-700 hover:text-white cursor-pointer border-zinc-700 h-8 ${viewMode === "table"
+                        ? "bg-white text-black"
                         : "text-zinc-400 hover:text-zinc-300"
-                    }`}
+                      }`}
                   >
                     <List className="h-3 w-3 mr-1" />
                     Table
@@ -410,18 +409,17 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
                     variant="outline"
                     size="sm"
                     onClick={() => setViewMode("grid")}
-                    className={`bg-zinc-900 hover:bg-zinc-700 hover:text-white cursor-pointer border-zinc-700 h-8 ${
-                      viewMode === "grid" 
-                        ? "bg-white text-black" 
+                    className={`bg-zinc-900 hover:bg-zinc-700 hover:text-white cursor-pointer border-zinc-700 h-8 ${viewMode === "grid"
+                        ? "bg-white text-black"
                         : "text-zinc-400 hover:text-zinc-300"
-                    }`}
+                      }`}
                   >
                     <LayoutGrid className="h-3 w-3 mr-1" />
                     Grid
                   </Button>
                 </div>
               </div>
-              
+
               {deck.granthas && deck.granthas.length > 0 ? (
                 viewMode === "table" ? (
                   <div className="rounded-md border border-zinc-800 overflow-hidden">
@@ -498,7 +496,7 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {deck.granthas.map((grantha) => (
-                      <Card 
+                      <Card
                         key={grantha.grantha_id}
                         className="bg-zinc-900 border-zinc-800 hover:shadow-md transition-all"
                       >
@@ -527,8 +525,8 @@ export default function GranthaDeckViewPage({ params }: { params: Promise<{ id: 
                               <div className="text-xs text-zinc-400 flex items-center gap-1 col-span-2">
                                 <BookMarked className="h-3 w-3" />
                                 <span className="text-zinc-300">
-                                  {grantha.description.length > 20 
-                                    ? `${grantha.description.substring(0, 20)}...` 
+                                  {grantha.description.length > 20
+                                    ? `${grantha.description.substring(0, 20)}...`
                                     : grantha.description}
                                 </span>
                               </div>

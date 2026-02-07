@@ -27,7 +27,8 @@ HEADER_ALIASES = {
     "remarks": ["remarks", "Remarks"],
     "stitch_or_nonstitch": [
         "stitch or nonstitch", "stitch_or_nonstitch", "stitch / nonstitch",
-        "stitch_or_non-stitch", "stitch or non-stitch", "Stitch / Nonstitch"
+        "stitch_or_non-stitch", "stitch or non-stitch", "stitch or non stitch", 
+        "stitch / non stitch", "Stitch / Nonstitch"
     ],
     "condition": ["condition", "Condition"],
     "horizontal_or_vertical_scan": [

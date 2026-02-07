@@ -34,7 +34,7 @@ export default function page() {
     setIsLoading(true)
 
     try {
-      const response = await axios.post('/api/grantha-authors', formData) 
+      const response = await axios.post('/api/grantha-authors', formData)
 
       console.log(response)
 
@@ -48,7 +48,7 @@ export default function page() {
         scribe_name: "",
       })
     } catch (error) {
-      
+
     } finally {
       setIsLoading(false)
     }

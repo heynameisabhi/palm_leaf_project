@@ -11,6 +11,7 @@
     "dev:all": "concurrently \"npm run dev\" \"npm run backend\""
   },
   "dependencies": {
+    "@fontsource/noto-sans-devanagari": "^5.2.8",
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.0.1",
     "@prisma/client": "^6.4.1",

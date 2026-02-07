@@ -37,6 +37,7 @@ interface ReportOptions {
     
     // Author & Language
     authorDetails: boolean;
+    authorBio: boolean;
     languageInfo: boolean;
     
     // Image Information
@@ -59,6 +60,7 @@ const defaultOptions: ReportOptions = {
     granthaBasicInfo: true,
     granthaDescriptions: false,
     authorDetails: true,
+    authorBio: false,
     languageInfo: true,
     imageCount: true,
     imageDetails: false,
@@ -87,7 +89,7 @@ export default function GenerateReport() {
             deck: ['deckBasicInfo', 'deckPhysicalProperties', 'deckCreationDetails'],
             user: ['userBasicInfo', 'userContactInfo', 'userPermissions'],
             grantha: ['granthaBasicInfo', 'granthaDescriptions'],
-            author: ['authorDetails', 'languageInfo'],
+            author: ['authorDetails', 'authorBio', 'languageInfo'],
             image: ['imageCount', 'imageDetails', 'scanningProperties'],
             additional: ['statisticalSummary', 'exportMetadata']
         };
@@ -384,9 +386,16 @@ export default function GenerateReport() {
                                 <CheckboxItem
                                     id="authorDetails"
                                     label="Author Information"
-                                    description="Author names, birth/death years, bio, scribe details"
+                                    description="Author names, birth/death years, scribe details"
                                     checked={reportOptions.authorDetails}
                                     onChange={(checked) => handleOptionChange('authorDetails', checked)}
+                                />
+                                <CheckboxItem
+                                    id="authorBio"
+                                    label="Author Biography"
+                                    description="Include detailed author biographies"
+                                    checked={reportOptions.authorBio}
+                                    onChange={(checked) => handleOptionChange('authorBio', checked)}
                                 />
                                 <CheckboxItem
                                     id="languageInfo"

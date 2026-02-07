@@ -11,25 +11,20 @@ export async function GET(request: NextRequest) {
 
     // Extract query parameters
     const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get("userId") || "";
-    const username = searchParams.get("username") || "";
     const deckName = searchParams.get("deckName") || "";
     const deckId = searchParams.get("deckId") || "";
     const limitParam = searchParams.get("limit");
     const sortField = searchParams.get("sortField") || "createdAt";
     const sortOrder = searchParams.get("sortOrder") || "desc";
-    
+    const startDate = searchParams.get("startDate") || "";
+    const endDate = searchParams.get("endDate") || "";
+
     // Set default limit to 10 if not specified
     const limit = limitParam ? parseInt(limitParam) : 10;
 
     // Build the where clause based on filters
     const whereClause: any = {};
-    
-    // If a specific user ID is provided, filter by it
-    if (userId) {
-      whereClause.user_id = userId;
-    }
-    
+
     // If a deck name is provided, filter with case-insensitive search
     if (deckName) {
       whereClause.grantha_deck_name = {
@@ -45,7 +40,23 @@ export async function GET(request: NextRequest) {
         mode: 'insensitive',
       };
     }
-    
+
+    // Filter by date range
+    if (startDate || endDate) {
+      whereClause.createdAt = {};
+
+      if (startDate) {
+        whereClause.createdAt.gte = new Date(startDate);
+      }
+
+      if (endDate) {
+        // Set to end of day for the end date
+        const endDateTime = new Date(endDate);
+        endDateTime.setHours(23, 59, 59, 999);
+        whereClause.createdAt.lte = endDateTime;
+      }
+    }
+
     // Build the include clause for related data
     const includeClause = {
       _count: {
@@ -62,35 +73,12 @@ export async function GET(request: NextRequest) {
 
     // Build the orderBy clause based on sort parameters
     const orderByClause: any = {};
-    
+
     // Handle special cases for sorting fields
     if (sortField === "user_name") {
       orderByClause.user = { user_name: sortOrder };
     } else {
       orderByClause[sortField] = sortOrder;
-    }
-
-    // If username filter is applied, find users matching the username
-    if (username) {
-      const users = await db.userAccount.findMany({
-        where: {
-          user_name: {
-            contains: username,
-            mode: 'insensitive',
-          },
-        },
-        select: { user_id: true },
-      });
-      
-      const userIds = users.map(user => user.user_id);
-      
-      // Only apply user_id filter if we found matching users
-      if (userIds.length > 0) {
-        whereClause.user_id = { in: userIds };
-      } else {
-        // If no users match the username, return empty result
-        return NextResponse.json({ granthaDeckRecords: [] });
-      }
     }
 
     // Query the database

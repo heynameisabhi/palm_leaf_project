@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
-import { AlertCircle, Filter, RefreshCw, Search, User, Database } from "lucide-react";
+import { AlertCircle, Filter, RefreshCw, Search, User, Database, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { formatTimeAgo } from "@/helpers/formatTime";
 import { GranthaDeck, Prisma } from "@prisma/client";
@@ -23,24 +23,28 @@ import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 
 type GranthaDeckWithCount = Prisma.GranthaDeckGetPayload<{
-  include: { 
+  include: {
     _count: { select: { granthas: true } },
     user: { select: { name: true, email: true } }
   }
 }>;
 
 export default function GranthaDeckViewer() {
-  const [userId, setUserId] = useState("");
-  const [username, setUsername] = useState("");
+  const [deckName, setDeckName] = useState("");
+  const [deckId, setDeckId] = useState("");
   const [limit, setLimit] = useState("10");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const router = useRouter();
 
   const fetchGranthaDecks = async () => {
     const queryParams = new URLSearchParams({
-      userId: userId || "",
-      username: username || "",
+      deckName: deckName || "",
+      deckId: deckId || "",
       limit: limit ? limit.toString() : "10",
+      startDate: startDate || "",
+      endDate: endDate || "",
     }).toString();
 
     const response = await axios.get(`/api/admin/view-records?${queryParams}`);
@@ -48,7 +52,7 @@ export default function GranthaDeckViewer() {
   };
 
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["grantha-decks", userId, username, limit],
+    queryKey: ["grantha-decks", deckName, deckId, limit, startDate, endDate],
     queryFn: fetchGranthaDecks,
   });
 
@@ -94,39 +98,39 @@ export default function GranthaDeckViewer() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <label
-                    htmlFor="userId"
+                    htmlFor="deckName"
                     className="text-sm font-medium text-zinc-300"
                   >
-                    User ID
+                    Grantha Deck Name
                   </label>
                   <div className="relative">
-                    <Database className="absolute left-2 top-2.5 h-4 w-4 text-zinc-500" />
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-zinc-500" />
                     <Input
-                      id="userId"
-                      placeholder="Filter by user ID"
-                      value={userId}
-                      onChange={(e) => setUserId(e.target.value)}
+                      id="deckName"
+                      placeholder="Filter by Grantha deck name"
+                      value={deckName}
+                      onChange={(e) => setDeckName(e.target.value)}
                       className="pl-8 bg-zinc-900 border-zinc-700 text-zinc-300"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <label
-                    htmlFor="username"
+                    htmlFor="deckId"
                     className="text-sm font-medium text-zinc-300"
                   >
-                    Username
+                    Grantha Deck ID
                   </label>
                   <div className="relative">
-                    <User className="absolute left-2 top-2.5 h-4 w-4 text-zinc-500" />
+                    <Database className="absolute left-2 top-2.5 h-4 w-4 text-zinc-500" />
                     <Input
-                      id="username"
-                      placeholder="Filter by username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                      id="deckId"
+                      placeholder="Filter by Grantha deck ID"
+                      value={deckId}
+                      onChange={(e) => setDeckId(e.target.value)}
                       className="pl-8 bg-zinc-900 border-zinc-700 text-zinc-300"
                     />
                   </div>
@@ -148,15 +152,55 @@ export default function GranthaDeckViewer() {
                     className="bg-zinc-900 border-zinc-700 text-zinc-300"
                   />
                 </div>
+                <div className="space-y-2">
+                  <label
+                    htmlFor="startDate"
+                    className="text-sm font-medium text-zinc-300"
+                  >
+                    Start Date
+                  </label>
+                  <div className="relative">
+                    <Calendar className="absolute left-2 top-2.5 h-4 w-4 text-zinc-500" />
+                    <Input
+                      id="startDate"
+                      type="date"
+                      placeholder="Start date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="pl-8 bg-zinc-900 border-zinc-700 text-zinc-300"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label
+                    htmlFor="endDate"
+                    className="text-sm font-medium text-zinc-300"
+                  >
+                    End Date
+                  </label>
+                  <div className="relative">
+                    <Calendar className="absolute left-2 top-2.5 h-4 w-4 text-zinc-500" />
+                    <Input
+                      id="endDate"
+                      type="date"
+                      placeholder="End date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="pl-8 bg-zinc-900 border-zinc-700 text-zinc-300"
+                    />
+                  </div>
+                </div>
               </div>
             </CardContent>
             <CardFooter className="flex justify-end gap-2">
               <Button
                 variant="outline"
                 onClick={() => {
-                  setUserId("");
-                  setUsername("");
+                  setDeckName("");
+                  setDeckId("");
                   setLimit("10");
+                  setStartDate("");
+                  setEndDate("");
                 }}
                 className="bg-zinc-900 border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-700 cursor-pointer"
               >
@@ -210,21 +254,37 @@ export default function GranthaDeckViewer() {
               <p className="text-sm text-muted-foreground">
                 Showing {data?.granthaDeckRecords?.length || 0} records
               </p>
-              <div className="flex gap-2">
-                {userId && (
+              <div className="flex gap-2 flex-wrap">
+                {deckName && (
                   <Badge
                     variant="outline"
                     className="flex items-center gap-1 bg-zinc-900 border-zinc-700 text-zinc-300"
                   >
-                    ID: {userId}
+                    Deck: {deckName}
                   </Badge>
                 )}
-                {username && (
+                {deckId && (
                   <Badge
                     variant="outline"
                     className="flex items-center gap-1 bg-zinc-900 border-zinc-700 text-zinc-300"
                   >
-                    User: {username}
+                    ID: {deckId}
+                  </Badge>
+                )}
+                {startDate && (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-1 bg-zinc-900 border-zinc-700 text-zinc-300"
+                  >
+                    From: {new Date(startDate).toLocaleDateString()}
+                  </Badge>
+                )}
+                {endDate && (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-1 bg-zinc-900 border-zinc-700 text-zinc-300"
+                  >
+                    To: {new Date(endDate).toLocaleDateString()}
                   </Badge>
                 )}
               </div>

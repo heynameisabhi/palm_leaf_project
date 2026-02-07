@@ -151,30 +151,42 @@ export async function POST(request: NextRequest) {
           console.log("Starting to fill grantha data");
 
           for (const grantha of granthaData) {
-            // Validate required fields
-            if (!grantha.grantha_id || !grantha.author || !grantha.language) {
+            // Autofill missing fields with "unknown"
+            const granthaId = grantha.grantha_id?.trim() || "unknown";
+            const authorName = grantha.author?.trim() || "unknown";
+            const languageName = grantha.language?.trim() || "unknown";
+            const granthaName = grantha.grantha_name?.trim() || "unknown";
+            const remarks = grantha.remarks?.trim() || "unknown";
+            const description = grantha.description?.trim() || "unknown";
+
+            // Validate that grantha_id is present (it's truly required)
+            if (granthaId === "unknown") {
               throw new Error(
-                `Missing required fields in Grantha data: ${JSON.stringify(
+                `grantha_id is required but missing in: ${JSON.stringify(
                   grantha
                 )}`
               );
             }
 
             // Clean the language text to remove quotes and standardize format
-            const cleanedLanguage = cleanLanguageText(grantha.language);
+            const cleanedLanguage = cleanLanguageText(languageName);
 
             // check if author is present
             let author = await tx.author.findFirst({
               where: {
                 author_name: {
-                  equals: grantha.author.trim().toLowerCase(),
+                  equals: authorName.toLowerCase(),
                   mode: "insensitive",
                 },
               },
             });
 
             if (!author) {
-              throw new Error(`Author ${grantha.author} not found!`);
+              // Create author if not found
+              author = await tx.author.create({
+                data: { author_name: authorName },
+              });
+              console.log(`Created new author: ${authorName}`);
             }
 
             // Check if the language is already present using cleaned language
@@ -203,13 +215,13 @@ export async function POST(request: NextRequest) {
 
             await tx.grantha.create({
               data: {
-                grantha_id: grantha.grantha_id,
+                grantha_id: granthaId,
                 grantha_deck_id: granthaDeck.grantha_deck_id,
-                grantha_name: grantha.grantha_name || "",
+                grantha_name: granthaName,
                 language_id: language.language_id,
                 author_id: author.author_id,
-                remarks: grantha.remarks || "",
-                description: grantha.description || "",
+                remarks: remarks,
+                description: description,
               },
             });
           }

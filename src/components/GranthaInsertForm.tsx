@@ -55,9 +55,9 @@ export default function GranthaInsertForm({ deckId, onSuccess }: GranthaDeckProp
   // Initialize form
   const form = useForm({
     defaultValues: {
-      grantha_name: "",
-      description: "",
-      remarks: "",
+      grantha_name: "unknown",
+      description: "unknown",
+      remarks: "unknown",
     },
   });
 
@@ -76,7 +76,7 @@ export default function GranthaInsertForm({ deckId, onSuccess }: GranthaDeckProp
         toast.error("Failed to load form data");
       }
     };
-    
+
     fetchData();
   }, []);
 
@@ -110,12 +110,12 @@ export default function GranthaInsertForm({ deckId, onSuccess }: GranthaDeckProp
       };
 
       const response = await axios.post('/api/grantha', granthaData);
-      
+
       toast.success("Grantha added successfully");
       form.reset();
       setSelectedLanguage(null);
       setSelectedAuthor(null);
-      
+
       if (onSuccess) {
         onSuccess();
       }
@@ -144,10 +144,10 @@ export default function GranthaInsertForm({ deckId, onSuccess }: GranthaDeckProp
                   <FormItem>
                     <FormLabel className="text-zinc-300">Grantha Name</FormLabel>
                     <FormControl>
-                      <Input 
-                        {...field} 
-                        className="bg-zinc-800 border-zinc-700 text-zinc-100" 
-                        placeholder="Enter grantha name" 
+                      <Input
+                        {...field}
+                        className="bg-zinc-800 border-zinc-700 text-zinc-100"
+                        placeholder="Enter grantha name"
                         required
                       />
                     </FormControl>
@@ -161,8 +161,8 @@ export default function GranthaInsertForm({ deckId, onSuccess }: GranthaDeckProp
                 <FormLabel className="text-zinc-300">Language</FormLabel>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full justify-between bg-zinc-800 border-zinc-700 text-zinc-100"
                     >
                       {selectedLanguage ? selectedLanguage.language_name : "Select language"}
@@ -199,8 +199,8 @@ export default function GranthaInsertForm({ deckId, onSuccess }: GranthaDeckProp
                 <FormLabel className="text-zinc-300">Author</FormLabel>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full justify-between bg-zinc-800 border-zinc-700 text-zinc-100"
                     >
                       {selectedAuthor ? selectedAuthor.author_name : "Select author"}
@@ -240,10 +240,10 @@ export default function GranthaInsertForm({ deckId, onSuccess }: GranthaDeckProp
                   <FormItem>
                     <FormLabel className="text-zinc-300">Description</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        {...field} 
-                        className="bg-zinc-800 border-zinc-700 text-zinc-100 min-h-[100px]" 
-                        placeholder="Enter description" 
+                      <Textarea
+                        {...field}
+                        className="bg-zinc-800 border-zinc-700 text-zinc-100 min-h-[100px]"
+                        placeholder="Enter description"
                       />
                     </FormControl>
                     <FormMessage className="text-red-400" />
@@ -259,10 +259,10 @@ export default function GranthaInsertForm({ deckId, onSuccess }: GranthaDeckProp
                   <FormItem>
                     <FormLabel className="text-zinc-300">Remarks</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        {...field} 
-                        className="bg-zinc-800 border-zinc-700 text-zinc-100 min-h-[100px]" 
-                        placeholder="Enter remarks" 
+                      <Textarea
+                        {...field}
+                        className="bg-zinc-800 border-zinc-700 text-zinc-100 min-h-[100px]"
+                        placeholder="Enter remarks"
                       />
                     </FormControl>
                     <FormMessage className="text-red-400" />
@@ -271,8 +271,8 @@ export default function GranthaInsertForm({ deckId, onSuccess }: GranthaDeckProp
               />
             </div>
 
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isSubmitting}
               className="bg-green-600 hover:bg-green-700 text-white w-full"
             >

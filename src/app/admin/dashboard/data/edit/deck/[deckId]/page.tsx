@@ -71,8 +71,11 @@ export default function EditGranthaDeck() {
       toast.success("Grantha Deck updated successfully");
       router.push(`/admin/dashboard/data/view/${deckId}`);
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error || "Failed to update Grantha Deck");
+    onError: (error: unknown) => {
+      const message = error instanceof Error && 'response' in error
+        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error
+        : 'Failed to update Grantha Deck';
+      toast.error(message || "Failed to update Grantha Deck");
     },
   });
 
@@ -285,7 +288,7 @@ export default function EditGranthaDeck() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="stitch_or_nonstitch" className="text-zinc-400">
-                      Stitch or Non-Stitch
+                      Stitch or Non Stitch
                       {deck?.stitch_or_nonstitch && (
                         <span className="text-zinc-500 ml-2">
                           (Current: {deck.stitch_or_nonstitch})

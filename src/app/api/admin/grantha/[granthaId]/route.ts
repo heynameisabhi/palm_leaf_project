@@ -51,8 +51,8 @@ export async function GET(
     }
 
     // Check if user has permission to edit
-    const canEdit = session.user.role === "admin" || 
-                   grantha.granthaDeck.user.user_name === session.user.name;
+    const canEdit = session.user.role === "admin" ||
+      grantha.granthaDeck.user.user_name === session.user.name;
 
     return NextResponse.json({ grantha, canEdit });
   } catch (error) {
@@ -105,8 +105,8 @@ export async function PUT(
     }
 
     // Check if user has permission to edit
-    const canEdit = session.user.role === "admin" || 
-                   existingGrantha.granthaDeck.user.user_name === session.user.name;
+    const canEdit = session.user.role === "admin" ||
+      existingGrantha.granthaDeck.user.user_name === session.user.name;
 
     if (!canEdit) {
       return NextResponse.json(
@@ -149,9 +149,9 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json({ 
-      message: "Grantha updated successfully", 
-      grantha: updatedGrantha 
+    return NextResponse.json({
+      message: "Grantha updated successfully",
+      grantha: updatedGrantha
     });
   } catch (error) {
     console.error("Error updating grantha:", error);
