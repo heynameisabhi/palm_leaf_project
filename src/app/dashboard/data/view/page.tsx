@@ -36,7 +36,7 @@ export default function GranthaDeckViewer() {
   const [activeTab, setActiveTab] = useState<"decks" | "authors">("decks");
   const [deckName, setDeckName] = useState("");
   const [deckId, setDeckId] = useState("");
-  const [limit, setLimit] = useState("10");
+  const [limit, setLimit] = useState("100");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "table">("table");
 
@@ -596,21 +596,38 @@ export default function GranthaDeckViewer() {
                 {authorsData?.authors?.length > 0 ? (
                   <div className="space-y-4">
                     <div className="rounded-md border border-zinc-800">
-                      <div className="grid grid-cols-5 gap-4 p-4 border-b border-zinc-800 bg-zinc-950">
+                      <div className="grid grid-cols-6 gap-4 p-4 border-b border-zinc-800 bg-zinc-950">
                         <div className="font-medium text-zinc-300">Author Name</div>
                         <div className="font-medium text-zinc-300">Birth Year</div>
                         <div className="font-medium text-zinc-300">Death Year</div>
                         <div className="font-medium text-zinc-300">Bio</div>
                         <div className="font-medium text-zinc-300">ID</div>
+                        <div className="font-medium text-zinc-300">Actions</div>
                       </div>
                       {authorsData.authors.map((author: Author) => (
-                        <div key={author.author_id} className="grid grid-cols-5 gap-4 p-4 border-b border-zinc-800 hover:bg-zinc-900/50 transition-colors">
+                        <div key={author.author_id} className="grid grid-cols-6 gap-4 p-4 border-b border-zinc-800 hover:bg-zinc-900/50 transition-colors">
                           <div className="text-zinc-300 font-medium">{author.author_name || "Unknown"}</div>
                           <div className="text-zinc-400">{author.birth_year || "Unknown"}</div>
                           <div className="text-zinc-400">{author.death_year || "Unknown"}</div>
                           <div className="text-zinc-400 text-sm truncate" title={author.bio || "No bio available"}>{author.bio || "No bio available"}</div>
                           <div className="text-zinc-400 text-sm font-mono">{author.author_id.substring(0, 8)}...</div>
+                          <div className="flex gap-2">
+
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                router.push(`/dashboard/data/insert/author/edit/${author.author_id}`)
+                              }
+                              className="bg-zinc-800 border-zinc-700 hover:bg-zinc-700 text-zinc-300"
+                            >
+                              <Edit className="h-4 w-4 text-white" />
+                            </Button>
+
+                          </div>
+
                         </div>
+
                       ))}
                     </div>
                   </div>
