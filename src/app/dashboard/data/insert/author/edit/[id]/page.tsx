@@ -5,13 +5,14 @@ import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
 import axios from "axios"
 import { toast } from "sonner"
-
+import { useQuery} from "@tanstack/react-query";
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/Card"
 import { Input } from "@/components/ui/Input"
 import { Label } from "@/components/ui/Label"
+import { formatTimeAgo } from "@/helpers/formatTime";
 import { Textarea } from "@/components/ui/textarea"
-import { Loader2, BookOpen, Calendar, User, Feather } from "lucide-react"
+import { Loader2, BookOpen, Calendar, User, Feather,ArrowLeft } from "lucide-react"
 
 export default function EditAuthorPage() {
 
@@ -82,7 +83,7 @@ export default function EditAuthorPage() {
 
       toast.success("Author updated successfully")
 
-      router.push("/dashboard/data/insert/author") // change if your list page path differs
+router.back()
 
     } catch (error) {
 
@@ -92,7 +93,31 @@ export default function EditAuthorPage() {
       setIsSubmitting(false)
     }
   }
+   const author_id = params.id?.toString();
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["grantha-deck", author_id],
+    queryFn: async () => {
+      try {
+        const response = await axios.get(`/api/user/view-records/${author_id}`);
+        if (!response.data.granthaDeck) {
+          throw new Error("Deck not found");
+        }
+        return response.data;
+      } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
+          throw new Error("Deck not found");
+        }
+        throw error;
+      }
+    },
+    enabled: !!author_id,
+  });
 
+  useEffect(() => {
+    if (data?.granthaDeck) {
+      setFormData(data.granthaDeck);
+    }
+  }, [data?.granthaDeck]);
 
 
   // ======================
@@ -114,20 +139,37 @@ return (
       {/* Ambient glow */}
       <div className="absolute -left-20 -top-20 h-40 w-40 rounded-full bg-green-500/10 blur-3xl" />
       <div className="absolute -bottom-20 -right-20 h-40 w-40 rounded-full bg-green-500/10 blur-3xl" />
+      
 
       <Card className="relative overflow-hidden border-0 bg-black/40 backdrop-blur-xl">
         {/* top accent */}
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-green-500 to-transparent opacity-70" />
-
+<div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={() => router.back()}
+            className="bg-zinc-900 border-zinc-700 text-zinc-300 hover:text-zinc-300 hover:bg-zinc-800 h-8 ml-3 "
+          >
+            <ArrowLeft className="h-3 w-3 mr-1" />
+            Back
+          </Button>
+          
+        </div>
         {/* HEADER */}
         <CardHeader className="space-y-1 pb-6">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500/10">
               <BookOpen className="h-4 w-4 text-green-400" />
             </div>
-            <CardTitle className="text-2xl font-bold text-white">
+            <div>
+             <CardTitle className="text-2xl font-bold text-white">
               Edit Author
             </CardTitle>
+            <p className="text-muted-foreground text-sm">
+              Last updated {data?.granthaDeck?.updatedAt ? formatTimeAgo(new Date(data.granthaDeck.updatedAt)) : 'N/A'}
+            </p>
+          </div>
+             
           </div>
           <CardDescription className="text-gray-400">
             Update the historical and manuscript attribution details.

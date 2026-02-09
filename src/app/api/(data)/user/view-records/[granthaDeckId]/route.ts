@@ -4,9 +4,12 @@ import { getAuthSession } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { granthaDeckId: string } }
+ context: { params: Promise<{ granthaDeckId: string }> }
 ) {
   try {
+    // ✅ await params
+    const { granthaDeckId } = await context.params;
+
     const session = await getAuthSession();
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -14,7 +17,7 @@ export async function GET(
 
     const granthaDeck = await db.granthaDeck.findUnique({
       where: {
-        grantha_deck_id: params.granthaDeckId,
+        grantha_deck_id: granthaDeckId,
       },
       include: {
         _count: {
