@@ -13,6 +13,9 @@ interface SearchStrategy {
   searchFields: string[];
 }
 
+
+
+
 interface SearchResult {
   type: 'deck' | 'grantha';
   [key: string]: any;
@@ -30,15 +33,19 @@ interface SearchResponse {
 interface RequestBody {
   query: string;
 }
+function looksLikeId(query: string) {
+  return /^[A-Z0-9_:-]+$/i.test(query);
+}
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body: RequestBody = await request.json();
     const { query } = body;
-    
+
     if (!query) {
       return NextResponse.json({ error: 'Query is required' }, { status: 400 });
     }
+
 
     const results = await searchManuscripts(query);
     return NextResponse.json(results);
@@ -48,7 +55,60 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 }
 
+
+
 async function searchManuscripts(userQuery: string): Promise<SearchResponse> {
+
+  // HARD SHORT-CIRCUIT FOR IDs
+  if (looksLikeId(userQuery)) {
+
+    const deck = await db.granthaDeck.findFirst({
+      where: { grantha_deck_id: userQuery },
+      include: {
+        granthas: {
+          include: {
+            author: true,
+            language: true,
+            scannedImages: {
+              include: { scanningProperties: true }
+            }
+          }
+        }
+      }
+    });
+
+    if (deck) {
+      return {
+        query: userQuery,
+        results: [{ type: 'deck', ...deck }],
+        count: 1
+      };
+    }
+
+    const grantha = await db.grantha.findFirst({
+      where: { grantha_id: userQuery },
+      include: {
+        author: true,
+        language: true,
+        granthaDeck: true,
+        scannedImages: {
+          include: { scanningProperties: true }
+        }
+      }
+    });
+
+    if (grantha) {
+      return {
+        query: userQuery,
+        results: [{ type: 'grantha', ...grantha }],
+        count: 1
+      };
+    }
+  }
+
+  // ⬇️ AI logic continues here
+
+
   try {
     const prompt = `
       You are a database query assistant for a palm leaf manuscript database using Prisma ORM. 
@@ -110,30 +170,62 @@ async function searchManuscripts(userQuery: string): Promise<SearchResponse> {
       - "Sanskrit manuscripts" -> {"searchType": "grantha", "filters": {"language": {"language_name": {"contains": "Sanskrit", "mode": "insensitive"}}}, "includes": ["language", "granthaDeck"], "searchFields": ["language.language_name"]}
 
       Return ONLY the JSON object, no explanations or markdown formatting.
+
+      IMPORTANT RULES:
+- If the user query looks like an ID (examples: TP_DEBU-0005, GRANTHA-001, TP:DEBU-0005):
+  - Use exact equality (=), NOT contains
+  - Map IDs to:
+    - grantha_deck_id for decks
+    - grantha_id for granthas
+  - Do NOT split the ID
+  - Do NOT remove special characters like '-', '_', ':'
+Example:
+"TP_DEBU-0005" ->
+{
+  "searchType": "deck",
+  "filters": { "grantha_deck_id": "TP_DEBU-0005" },
+  "includes": ["granthas"],
+  "searchFields": []
+}
+
     `;
 
     const result = await model.generateContent(prompt);
     let aiResponse = result.response.text().trim();
-    
+
     console.log('Raw Gemini Response:', aiResponse);
-    
+
     // Clean up the response - remove markdown formatting if present
     aiResponse = aiResponse.replace(/```json\n?/gi, '').replace(/```\n?/gi, '');
     aiResponse = aiResponse.trim();
-    
+
     let searchStrategy: SearchStrategy;
+
     try {
       searchStrategy = JSON.parse(aiResponse) as SearchStrategy;
+
+      // 🔐 Safety: force exact match if AI messes up IDs
+      if (typeof searchStrategy.filters?.grantha_deck_id === 'object') {
+        searchStrategy.filters.grantha_deck_id = userQuery;
+      }
+
+      if (typeof searchStrategy.filters?.grantha_id === 'object') {
+        searchStrategy.filters.grantha_id = userQuery;
+      }
+
     } catch (parseError) {
       console.error('Failed to parse Gemini response:', parseError);
       throw new Error('Invalid AI response format');
+
+
     }
+
 
     console.log('Parsed Search Strategy:', JSON.stringify(searchStrategy, null, 2));
 
     // Execute the search based on the AI-generated strategy
     let results: SearchResult[] = [];
-    
+
     if (searchStrategy.searchType === 'deck' || searchStrategy.searchType === 'combined') {
       const deckQuery: any = {
         where: searchStrategy.filters || {},
@@ -200,7 +292,7 @@ async function searchManuscripts(userQuery: string): Promise<SearchResponse> {
 
   } catch (error) {
     console.error('Error in AI search:', error);
-    
+
     // Fallback to simple text search
     const fallbackResults = await db.granthaDeck.findMany({
       where: {

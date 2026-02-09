@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import {  useParams,useRouter } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+
 import {
   Card,
   CardContent,
@@ -44,8 +45,9 @@ const STITCH_TYPES = [
   { value: "non stitch", label: "Non Stitch" },
 ];
 
-export default function EditGranthaDeckPage({ params }: { params: { id: string } }) {
-  const deckId = params.id;
+export default function EditGranthaDeckPage() {
+  const params = useParams<{ id: string }>();
+  const deckId = params.id?.toString();
 
   const router = useRouter();
   const [formData, setFormData] = useState<Partial<GranthaDeck>>({});
