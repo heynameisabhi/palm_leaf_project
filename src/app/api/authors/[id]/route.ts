@@ -6,12 +6,13 @@ import { NextResponse } from "next/server"
 // ======================
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params
 
     const author = await db.author.findUnique({
-      where: { author_id: params.id }
+      where: { author_id: id },
     })
 
     if (!author) {
@@ -22,40 +23,34 @@ export async function GET(
     }
 
     return NextResponse.json(author)
-
   } catch (error) {
     console.error(error)
-
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
     )
   }
 }
-
-
 
 // ======================
 // ✅ UPDATE AUTHOR
 // ======================
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-
+    const { id } = await context.params
     const body = await req.json()
 
     const updatedAuthor = await db.author.update({
-      where: { author_id: params.id },
-      data: body
+      where: { author_id: id },
+      data: body,
     })
 
     return NextResponse.json(updatedAuthor)
-
   } catch (error) {
     console.error(error)
-
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -63,26 +58,25 @@ export async function PUT(
   }
 }
 
-
-
 // ======================
 // ✅ DELETE AUTHOR
 // ======================
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params
 
     await db.author.delete({
-      where: { author_id: params.id }
+      where: { author_id: id },
     })
 
-    return NextResponse.json({ message: "Author deleted successfully" })
-
+    return NextResponse.json({
+      message: "Author deleted successfully",
+    })
   } catch (error) {
     console.error(error)
-
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

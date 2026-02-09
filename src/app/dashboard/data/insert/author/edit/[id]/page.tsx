@@ -107,142 +107,141 @@ export default function EditAuthorPage() {
   }
 
 
+return (
+  <div className="flex min-h-screen w-full items-center justify-center bg-[#0a0a0a] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900 via-[#050505] to-black p-4">
 
-  return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-[#0a0a0a] p-4">
+    <div className="relative z-10 w-full max-w-2xl">
+      {/* Ambient glow */}
+      <div className="absolute -left-20 -top-20 h-40 w-40 rounded-full bg-green-500/10 blur-3xl" />
+      <div className="absolute -bottom-20 -right-20 h-40 w-40 rounded-full bg-green-500/10 blur-3xl" />
 
-      <div className="w-full max-w-2xl">
+      <Card className="relative overflow-hidden border-0 bg-black/40 backdrop-blur-xl">
+        {/* top accent */}
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-green-500 to-transparent opacity-70" />
 
-        <Card className="bg-black/40 backdrop-blur-xl">
-
-          <CardHeader>
-            <CardTitle className="text-white text-2xl">
+        {/* HEADER */}
+        <CardHeader className="space-y-1 pb-6">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500/10">
+              <BookOpen className="h-4 w-4 text-green-400" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-white">
               Edit Author
             </CardTitle>
+          </div>
+          <CardDescription className="text-gray-400">
+            Update the historical and manuscript attribution details.
+          </CardDescription>
+        </CardHeader>
 
-            <CardDescription>
-              Update author details
-            </CardDescription>
-          </CardHeader>
+        {/* FORM */}
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-6 pb-6">
 
+            {/* Author Name */}
+            <div className="space-y-2">
+              <Label className="flex items-center text-sm font-medium text-gray-300">
+                <User className="mr-2 h-3.5 w-3.5 text-green-400" />
+                Author Name
+              </Label>
+              <Input
+                name="author_name"
+                value={formData.author_name}
+                onChange={handleChange}
+                required
+                className="border-0 bg-white/5 px-4 py-3 text-white placeholder:text-gray-500 focus:ring-1 focus:ring-green-500/50"
+              />
+            </div>
 
-          <form onSubmit={handleSubmit}>
-
-            <CardContent className="space-y-6">
-
-              {/* Author Name */}
+            {/* Years */}
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-gray-300">
-                  <User className="inline mr-2 h-4 w-4" />
-                  Author Name
+                <Label className="flex items-center text-sm font-medium text-gray-300">
+                  <Calendar className="mr-2 h-3.5 w-3.5 text-green-400" />
+                  Birth Year
                 </Label>
-
                 <Input
-                  name="author_name"
-                  value={formData.author_name ?? ""}
+                  name="birth_year"
+                  value={formData.birth_year}
                   onChange={handleChange}
-                  required
+                  className="border-0 bg-white/5 px-4 py-3 text-white focus:ring-1 focus:ring-green-500/50"
                 />
               </div>
 
-
-              {/* Birth + Death */}
-              <div className="grid grid-cols-2 gap-4">
-
-                <div className="space-y-2">
-                  <Label className="text-gray-300">
-                    <Calendar className="inline mr-2 h-4 w-4" />
-                    Birth Year
-                  </Label>
-
-                  <Input
-                    name="birth_year"
-                    value={formData.birth_year ?? ""}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-gray-300">
-                    <Calendar className="inline mr-2 h-4 w-4" />
-                    Death Year
-                  </Label>
-
-                  <Input
-                    name="death_year"
-                    value={formData.death_year ?? ""}
-                    onChange={handleChange}
-                  />
-                </div>
-
-              </div>
-
-
-              {/* Biography */}
               <div className="space-y-2">
-                <Label className="text-gray-300">
-                  <BookOpen className="inline mr-2 h-4 w-4" />
-                  Biography
+                <Label className="flex items-center text-sm font-medium text-gray-300">
+                  <Calendar className="mr-2 h-3.5 w-3.5 text-green-400" />
+                  Death Year
                 </Label>
-
-                <Textarea
-                  name="bio"
-                  value={formData.bio ?? ""}
-                  onChange={handleChange}
-                />
-              </div>
-
-
-              {/* Scribe */}
-              <div className="space-y-2">
-                <Label className="text-gray-300">
-                  <Feather className="inline mr-2 h-4 w-4" />
-                  Scribe Name
-                </Label>
-
                 <Input
-                  name="scribe_name"
-                  value={formData.scribe_name ?? ""}
+                  name="death_year"
+                  value={formData.death_year}
                   onChange={handleChange}
+                  className="border-0 bg-white/5 px-4 py-3 text-white focus:ring-1 focus:ring-green-500/50"
                 />
               </div>
+            </div>
 
-            </CardContent>
+            {/* Bio */}
+            <div className="space-y-2">
+              <Label className="flex items-center text-sm font-medium text-gray-300">
+                <BookOpen className="mr-2 h-3.5 w-3.5 text-green-400" />
+                Biography
+              </Label>
+              <Textarea
+                name="bio"
+                value={formData.bio}
+                onChange={handleChange}
+                className="min-h-[120px] border-0 bg-white/5 px-4 py-3 text-white focus:ring-1 focus:ring-green-500/50"
+              />
+            </div>
 
+            {/* Scribe */}
+            <div className="space-y-2">
+              <Label className="flex items-center text-sm font-medium text-gray-300">
+                <Feather className="mr-2 h-3.5 w-3.5 text-green-400" />
+                Scribe Name
+              </Label>
+              <Input
+                name="scribe_name"
+                value={formData.scribe_name}
+                onChange={handleChange}
+                className="border-0 bg-white/5 px-4 py-3 text-white focus:ring-1 focus:ring-green-500/50"
+              />
+            </div>
 
+          </CardContent>
 
-            <CardFooter className="flex justify-between">
+          {/* FOOTER */}
+          <CardFooter className="flex justify-between border-t border-white/5 bg-white/5 px-6 py-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => router.back()}
+              className="text-gray-400 hover:text-white"
+            >
+              Cancel
+            </Button>
 
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => router.back()}
-              >
-                Cancel
-              </Button>
-
-
-              <Button type="submit" disabled={isSubmitting}>
-
-                {isSubmitting ? (
-                  <span className="flex items-center">
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating...
-                  </span>
-                ) : (
-                  "Update Author"
-                )}
-
-              </Button>
-
-            </CardFooter>
-
-          </form>
-
-        </Card>
-
-      </div>
-
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-gradient-to-r from-emerald-900 to-green-600 hover:to-green-700 text-white"
+            >
+              {isSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Updating...
+                </span>
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
     </div>
-  )
+  </div>
+);
+
 }

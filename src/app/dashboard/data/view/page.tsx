@@ -587,16 +587,30 @@ export default function GranthaDeckViewer() {
               </Alert>
             ) : (
               <>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    Showing {authorsData?.authors?.length || 0} authors
-                  </p>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-xl font-semibold text-zinc-200">
+                      Authors
+                    </h2>
+                    <p className="text-sm text-zinc-400">
+                      Showing {authorsData?.authors?.length || 0} authors
+                    </p>
+                  </div>
                 </div>
+
 
                 {authorsData?.authors?.length > 0 ? (
                   <div className="space-y-4">
-                    <div className="rounded-md border border-zinc-800">
-                      <div className="grid grid-cols-6 gap-4 p-4 border-b border-zinc-800 bg-zinc-950">
+                    <div className="rounded-xl border border-zinc-800 bg-gradient-to-b from-zinc-950 to-black overflow-hidden">
+
+                      <div className="
+  grid grid-cols-6 gap-4
+  px-6 py-3
+  border-b border-zinc-800
+  bg-zinc-900/60
+  text-xs uppercase tracking-wide text-zinc-400
+">
+
                         <div className="font-medium text-zinc-300">Author Name</div>
                         <div className="font-medium text-zinc-300">Birth Year</div>
                         <div className="font-medium text-zinc-300">Death Year</div>
@@ -605,12 +619,29 @@ export default function GranthaDeckViewer() {
                         <div className="font-medium text-zinc-300">Actions</div>
                       </div>
                       {authorsData.authors.map((author: Author) => (
-                        <div key={author.author_id} className="grid grid-cols-6 gap-4 p-4 border-b border-zinc-800 hover:bg-zinc-900/50 transition-colors">
-                          <div className="text-zinc-300 font-medium">{author.author_name || "Unknown"}</div>
-                          <div className="text-zinc-400">{author.birth_year || "Unknown"}</div>
-                          <div className="text-zinc-400">{author.death_year || "Unknown"}</div>
-                          <div className="text-zinc-400 text-sm truncate" title={author.bio || "No bio available"}>{author.bio || "No bio available"}</div>
-                          <div className="text-zinc-400 text-sm font-mono">{author.author_id.substring(0, 8)}...</div>
+                        <div
+                          key={author.author_id}
+                          className="
+    grid grid-cols-6 gap-4
+    px-6 py-4
+    border-b border-zinc-800
+    hover:bg-zinc-900/40
+    transition-colors
+    group
+  "
+                        >
+
+                          <div className="text-zinc-200 font-medium">{author.author_name || "Unknown"}</div>
+                          <div className="text-zinc-400 text-sm">{author.birth_year || "Unknown"}</div>
+                          <div className="text-zinc-400 text-sm">{author.death_year || "Unknown"}</div>
+                          <div
+                            className="text-zinc-400 text-sm line-clamp-2"
+                            title={author.bio || "No bio available"}
+                          >
+                            {author.bio || "No bio available"}
+                          </div>
+
+                          <div className="text-zinc-500 text-xm font-mono">{author.author_id.substring(0, 8)}...</div>
                           <div className="flex gap-2">
 
                             <Button
@@ -619,7 +650,14 @@ export default function GranthaDeckViewer() {
                               onClick={() =>
                                 router.push(`/dashboard/data/insert/author/edit/${author.author_id}`)
                               }
-                              className="bg-zinc-800 border-zinc-700 hover:bg-zinc-700 text-zinc-300"
+                              className="
+  bg-zinc-900
+  border border-zinc-700
+  hover:bg-zinc-800
+  text-zinc-300
+  group-hover:text-white
+"
+
                             >
                               <Edit className="h-4 w-4 text-white" />
                             </Button>
