@@ -1,11 +1,8 @@
 import { db } from '@/lib/db';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextRequest, NextResponse } from 'next/server';
+import { GoogleGenAI } from '@google/genai';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
-const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash"
-});
+const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY as string });
 
 // Type definitions
 interface SearchStrategy {
@@ -192,8 +189,22 @@ Example:
 
     `;
 
-    const result = await model.generateContent(prompt);
-    let aiResponse = result.response.text().trim();
+    let responseText = '';
+
+    try {
+      const result = await genAI.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [
+          {
+            text: prompt
+          }
+        ]
+      });
+      responseText = result.text || '';
+    } catch (e) {
+      console.error('Error generating AI response:', e);
+    }
+    let aiResponse = responseText.trim();
 
     console.log('Raw Gemini Response:', aiResponse);
 

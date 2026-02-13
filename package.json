@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@fontsource/noto-sans-devanagari": "^5.2.8",
-    "@google/genai": "^1.40.0",
+    "@google/genai": "^1.41.0",
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.0.1",
     "@prisma/client": "^6.4.1",
