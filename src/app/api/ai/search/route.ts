@@ -33,13 +33,16 @@ interface RequestBody {
   query: string;
 }
 function looksLikeId(query: string) {
-  return /^[A-Z0-9_:-]+$/i.test(query);
+  return /^[A-Z]+[A-Z0-9_:-]*\d+[A-Z0-9_:-]*$/i.test(query);
 }
+
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body: RequestBody = await request.json();
-    const { query } = body;
+    const rawQuery = body.query;
+    const query = normalizeQuery(rawQuery);
+
 
     if (!query) {
       return NextResponse.json({ error: 'Query is required' }, { status: 400 });
@@ -55,8 +58,47 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 }
 
 
+function normalizeQuery(q: string) {
+  return q
+    .toLowerCase()
+    .trim()
+    .replace(/[.:;,_]/g, '')   // remove punctuation
+    .replace(/[–—]/g, '-')     // normalize dashes
+    .replace(/\s+/g, ' ')
+}
+
 
 async function searchManuscripts(userQuery: string): Promise<SearchResponse> {
+  const deckNameMatch = await db.granthaDeck.findMany({
+    where: {
+      grantha_deck_name: {
+        contains: userQuery.replace(':', '').trim(),
+        mode: 'insensitive'
+      }
+    },
+    include: {
+      granthas: {
+        include: {
+          author: true,
+          language: true,
+          scannedImages: {
+            include: { scanningProperties: true }
+          }
+        }
+      }
+    }
+  });
+
+  if (deckNameMatch.length > 0) {
+    return {
+      query: userQuery,
+      results: deckNameMatch.map(deck => ({
+        type: 'deck' as const,
+        ...deck
+      })),
+      count: deckNameMatch.length
+    };
+  }
 
   // HARD SHORT-CIRCUIT FOR IDs
   if (looksLikeId(userQuery)) {
@@ -75,6 +117,9 @@ async function searchManuscripts(userQuery: string): Promise<SearchResponse> {
         }
       }
     });
+
+
+
 
     if (deck) {
       return {
@@ -186,6 +231,11 @@ Example:
   "includes": ["granthas"],
   "searchFields": []
 }
+  IMPORTANT:
+- If the query contains words or looks like a title (example: Yoga-Wisdom),
+  DO NOT treat it as an ID.
+- Use "contains" search on names instead.
+
 
     `;
 
@@ -266,35 +316,61 @@ Example:
     }
 
     if (searchStrategy.searchType === 'grantha' || searchStrategy.searchType === 'combined') {
-      const granthaQuery: any = {
-        where: searchStrategy.filters || {},
-        include: {}
-      };
 
-      // Add includes
+      const normalizedQuery = normalizeQuery(userQuery)
+
+      const granthaQuery: any = {
+        where: {
+          OR: [
+            // 1️⃣ AI-generated filter (unchanged)
+            searchStrategy.filters,
+
+            // 2️⃣ Fallback: normalized name match
+            {
+              grantha_name: {
+                contains: normalizedQuery,
+                mode: 'insensitive'
+              }
+            },
+
+            // 3️⃣ Extra fallback: handle "Yoga Wisdom" vs "Yoga-Wisdom:"
+            {
+              grantha_name: {
+                contains: normalizedQuery.replace('-', ' '),
+                mode: 'insensitive'
+              }
+            }
+          ]
+        },
+        include: {}
+      }
+
+      // ✅ Preserve your includes exactly as before
       if (searchStrategy.includes?.includes('author')) {
-        granthaQuery.include.author = true;
+        granthaQuery.include.author = true
       }
       if (searchStrategy.includes?.includes('language')) {
-        granthaQuery.include.language = true;
+        granthaQuery.include.language = true
       }
       if (searchStrategy.includes?.includes('granthaDeck')) {
-        granthaQuery.include.granthaDeck = true;
+        granthaQuery.include.granthaDeck = true
       }
       if (searchStrategy.includes?.includes('scannedImages')) {
         granthaQuery.include.scannedImages = {
-          include: {
-            scanningProperties: true
-          }
-        };
+          include: { scanningProperties: true }
+        }
       }
 
-      const granthaResults = await db.grantha.findMany(granthaQuery);
-      results = results.concat(granthaResults.map((grantha: any) => ({
-        type: 'grantha' as const,
-        ...grantha
-      })));
+      const granthaResults = await db.grantha.findMany(granthaQuery)
+
+      results = results.concat(
+        granthaResults.map((grantha: any) => ({
+          type: 'grantha' as const,
+          ...grantha
+        }))
+      )
     }
+
 
     return {
       query: userQuery,
