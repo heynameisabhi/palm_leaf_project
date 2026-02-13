@@ -339,11 +339,11 @@ export default function SearchPage(): JSX.Element {
               value: grantha.language.language_name,
             },
             grantha.scannedImages &&
-              grantha.scannedImages.length > 0 && {
-                icon: FileText,
-                label: "Scanned Images",
-                value: grantha.scannedImages.length.toString(),
-              },
+            grantha.scannedImages.length > 0 && {
+              icon: FileText,
+              label: "Scanned Images",
+              value: grantha.scannedImages.length.toString(),
+            },
           ]
             .filter(Boolean)
             .map((item, index) => (
