@@ -69,7 +69,7 @@ export async function GET(request: Request) {
     }
 
     // Convert/process the image
-    const imageBuffer = await sharpImage[outputFormat]().toBuffer();
+    const imageBuffer = await (sharpImage as any)[outputFormat]().toBuffer();
     
     // Return the processed image
     return new NextResponse(imageBuffer, {

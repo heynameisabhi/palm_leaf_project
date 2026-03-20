@@ -94,7 +94,7 @@ interface SearchResponse {
   searchStrategy?: any;
 }
 
-export default function SearchPage(): JSX.Element {
+export default function SearchPage() {
   const [query, setQuery] = useState<string>("");
   const [results, setResults] = useState<SearchResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -144,7 +144,7 @@ export default function SearchPage(): JSX.Element {
     return `${length} × ${width} cm`;
   };
 
-  const renderDeckResult = (deck: SearchResult): JSX.Element => (
+  const renderDeckResult = (deck: SearchResult) => (
     <div
       key={deck.grantha_deck_id}
       className="group relative overflow-hidden rounded-2xl bg-black border border-zinc-800 hover:border-green-700 transition-all duration-300 hover:shadow-lg hover:shadow-green-950/20"
@@ -289,7 +289,7 @@ export default function SearchPage(): JSX.Element {
     </div>
   );
 
-  const renderGranthaResult = (grantha: SearchResult): JSX.Element => (
+  const renderGranthaResult = (grantha: SearchResult) => (
     <div
       key={grantha.grantha_id}
       className="group relative overflow-hidden rounded-2xl bg-black border border-zinc-800 hover:border-green-700 transition-all duration-300 hover:shadow-lg hover:shadow-green-950/20"
@@ -328,24 +328,22 @@ export default function SearchPage(): JSX.Element {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
           {[
-            grantha.author && {
+            ...(grantha.author ? [{
               icon: User,
               label: "Author",
               value: grantha.author.author_name,
-            },
-            grantha.language && {
+            }] : []),
+            ...(grantha.language ? [{
               icon: Languages,
               label: "Language",
               value: grantha.language.language_name,
-            },
-            grantha.scannedImages &&
-            grantha.scannedImages.length > 0 && {
+            }] : []),
+            ...((grantha.scannedImages && grantha.scannedImages.length > 0) ? [{
               icon: FileText,
               label: "Scanned Images",
               value: grantha.scannedImages.length.toString(),
-            },
+            }] : []),
           ]
-            .filter(Boolean)
             .map((item, index) => (
               <div
                 key={index}

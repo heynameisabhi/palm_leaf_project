@@ -430,29 +430,27 @@ const ManualManuscriptSearch: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
           {[
-            grantha.author && {
+            ...(grantha.author ? [{
               icon: User,
               label: "Author",
               value: grantha.author.author_name,
-            },
-            grantha.author?.scribe_name && {
+            }] : []),
+            ...(grantha.author?.scribe_name ? [{
               icon: User,
               label: "Scribe",
               value: grantha.author.scribe_name,
-            },
-            grantha.language && {
+            }] : []),
+            ...(grantha.language ? [{
               icon: Languages,
               label: "Language",
               value: grantha.language.language_name,
-            },
-            grantha.scannedImages &&
-            grantha.scannedImages.length > 0 && {
+            }] : []),
+            ...((grantha.scannedImages && grantha.scannedImages.length > 0) ? [{
               icon: FileText,
               label: "Scanned Images",
               value: grantha.scannedImages.length.toString(),
-            },
+            }] : []),
           ]
-            .filter(Boolean)
             .map((item, index) => (
               <div
                 key={index}
@@ -530,12 +528,11 @@ const ManualManuscriptSearch: React.FC = () => {
                   label: "Stitch Type",
                   value: grantha.granthaDeck.stitch_or_nonstitch || "N/A",
                 },
-                grantha.granthaDeck.user && {
+                ...(grantha.granthaDeck.user ? [{
                   label: "Added By",
                   value: grantha.granthaDeck.user.user_name,
-                },
+                }] : []),
               ]
-                .filter(Boolean)
                 .map((item, index) => (
                   <div
                     key={index}

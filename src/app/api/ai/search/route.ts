@@ -40,16 +40,14 @@ function looksLikeId(query: string) {
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body: RequestBody = await request.json();
-    const rawQuery = body.query;
-    const query = normalizeQuery(rawQuery);
+    const rawQuery = body.query?.trim();
 
-
-    if (!query) {
+    if (!rawQuery) {
       return NextResponse.json({ error: 'Query is required' }, { status: 400 });
     }
 
+    const results = await searchManuscripts(rawQuery);
 
-    const results = await searchManuscripts(query);
     return NextResponse.json(results);
   } catch (error) {
     console.error('Search error:', error);
@@ -68,43 +66,11 @@ function normalizeQuery(q: string) {
 }
 
 
-async function searchManuscripts(userQuery: string): Promise<SearchResponse> {
-  const deckNameMatch = await db.granthaDeck.findMany({
-    where: {
-      grantha_deck_name: {
-        contains: userQuery.replace(':', '').trim(),
-        mode: 'insensitive'
-      }
-    },
-    include: {
-      granthas: {
-        include: {
-          author: true,
-          language: true,
-          scannedImages: {
-            include: { scanningProperties: true }
-          }
-        }
-      }
-    }
-  });
-
-  if (deckNameMatch.length > 0) {
-    return {
-      query: userQuery,
-      results: deckNameMatch.map(deck => ({
-        type: 'deck' as const,
-        ...deck
-      })),
-      count: deckNameMatch.length
-    };
-  }
-
-  // HARD SHORT-CIRCUIT FOR IDs
-  if (looksLikeId(userQuery)) {
+async function searchManuscripts(rawQuery: string): Promise<SearchResponse> {
+  if (looksLikeId(rawQuery)) {
 
     const deck = await db.granthaDeck.findFirst({
-      where: { grantha_deck_id: userQuery },
+      where: { grantha_deck_id: rawQuery },
       include: {
         granthas: {
           include: {
@@ -123,14 +89,14 @@ async function searchManuscripts(userQuery: string): Promise<SearchResponse> {
 
     if (deck) {
       return {
-        query: userQuery,
+        query: rawQuery,
         results: [{ type: 'deck', ...deck }],
         count: 1
       };
     }
 
     const grantha = await db.grantha.findFirst({
-      where: { grantha_id: userQuery },
+      where: { grantha_id: rawQuery },
       include: {
         author: true,
         language: true,
@@ -143,12 +109,48 @@ async function searchManuscripts(userQuery: string): Promise<SearchResponse> {
 
     if (grantha) {
       return {
-        query: userQuery,
+        query: rawQuery,
         results: [{ type: 'grantha', ...grantha }],
         count: 1
       };
     }
+   
   }
+
+
+  const deckNameMatch = await db.granthaDeck.findMany({
+    where: {
+      grantha_deck_name: {
+        contains: rawQuery.replace(':', '').trim(),
+        mode: 'insensitive'
+      }
+    },
+    include: {
+      granthas: {
+        include: {
+          author: true,
+          language: true,
+          scannedImages: {
+            include: { scanningProperties: true }
+          }
+        }
+      }
+    }
+  });
+
+  if (deckNameMatch.length > 0) {
+    return {
+      query: rawQuery,
+      results: deckNameMatch.map(deck => ({
+        type: 'deck' as const,
+        ...deck
+      })),
+      count: deckNameMatch.length
+    };
+  }
+
+  // HARD SHORT-CIRCUIT FOR IDs
+
 
   // ⬇️ AI logic continues here
 
@@ -199,7 +201,7 @@ async function searchManuscripts(userQuery: string): Promise<SearchResponse> {
       ScanningProperties:
       - worked_by (String, person who worked on it)
 
-      User query: "${userQuery}"
+      User query: "${rawQuery}"
 
       Generate a JSON object that represents the search strategy for this query. The JSON should include:
       1. "searchType": "deck" | "grantha" | "combined" - which model to primarily search
@@ -267,13 +269,23 @@ Example:
     try {
       searchStrategy = JSON.parse(aiResponse) as SearchStrategy;
 
+      // 🔐 Force original casing for ID searches
+      if (searchStrategy.filters?.grantha_id) {
+        searchStrategy.filters.grantha_id = rawQuery; // NOT userQuery
+      }
+
+      if (searchStrategy.filters?.grantha_deck_id) {
+        searchStrategy.filters.grantha_deck_id = rawQuery; // NOT userQuery
+      }
+
+
       // 🔐 Safety: force exact match if AI messes up IDs
       if (typeof searchStrategy.filters?.grantha_deck_id === 'object') {
-        searchStrategy.filters.grantha_deck_id = userQuery;
+        searchStrategy.filters.grantha_deck_id = rawQuery;
       }
 
       if (typeof searchStrategy.filters?.grantha_id === 'object') {
-        searchStrategy.filters.grantha_id = userQuery;
+        searchStrategy.filters.grantha_id = rawQuery;
       }
 
     } catch (parseError) {
@@ -317,7 +329,7 @@ Example:
 
     if (searchStrategy.searchType === 'grantha' || searchStrategy.searchType === 'combined') {
 
-      const normalizedQuery = normalizeQuery(userQuery)
+      const normalizedQuery = normalizeQuery(rawQuery)
 
       const granthaQuery: any = {
         where: {
@@ -373,7 +385,7 @@ Example:
 
 
     return {
-      query: userQuery,
+      query: rawQuery,
       searchStrategy: searchStrategy,
       results: results,
       count: results.length
@@ -386,17 +398,17 @@ Example:
     const fallbackResults = await db.granthaDeck.findMany({
       where: {
         OR: [
-          { grantha_deck_name: { contains: userQuery, mode: 'insensitive' } },
-          { grantha_owner_name: { contains: userQuery, mode: 'insensitive' } },
-          { physical_condition: { contains: userQuery, mode: 'insensitive' } },
-          { stitch_or_nonstitch: { contains: userQuery, mode: 'insensitive' } },
+          { grantha_deck_name: { contains: rawQuery, mode: 'insensitive' } },
+          { grantha_owner_name: { contains: rawQuery, mode: 'insensitive' } },
+          { physical_condition: { contains: rawQuery, mode: 'insensitive' } },
+          { stitch_or_nonstitch: { contains: rawQuery, mode: 'insensitive' } },
           {
             granthas: {
               some: {
                 OR: [
-                  { grantha_name: { contains: userQuery, mode: 'insensitive' } },
-                  { author: { author_name: { contains: userQuery, mode: 'insensitive' } } },
-                  { language: { language_name: { contains: userQuery, mode: 'insensitive' } } }
+                  { grantha_name: { contains: rawQuery, mode: 'insensitive' } },
+                  { author: { author_name: { contains: rawQuery, mode: 'insensitive' } } },
+                  { language: { language_name: { contains: rawQuery, mode: 'insensitive' } } }
                 ]
               }
             }
@@ -419,7 +431,7 @@ Example:
     });
 
     return {
-      query: userQuery,
+      query: rawQuery,
       results: fallbackResults.map((deck: any) => ({ type: 'deck' as const, ...deck })),
       count: fallbackResults.length,
       fallback: true,

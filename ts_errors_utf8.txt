@@ -1,0 +1,23 @@
+﻿src/app/api/images/route.ts(72,31): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'Sharp'.
+  No index signature with a parameter of type 'string' was found on type 'Sharp'.
+src/app/dashboard/data/search/ai/page.tsx(97,39): error TS2503: Cannot find namespace 'JSX'.
+src/app/dashboard/data/search/ai/page.tsx(147,50): error TS2503: Cannot find namespace 'JSX'.
+src/app/dashboard/data/search/ai/page.tsx(292,56): error TS2503: Cannot find namespace 'JSX'.
+src/app/dashboard/data/search/ai/page.tsx(356,22): error TS18048: 'item' is possibly 'undefined'.
+src/app/dashboard/data/search/ai/page.tsx(356,27): error TS2339: Property 'icon' does not exist on type 'false | { icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; label: string; value: string; }'.
+  Property 'icon' does not exist on type 'false'.
+src/app/dashboard/data/search/ai/page.tsx(359,22): error TS18048: 'item' is possibly 'undefined'.
+src/app/dashboard/data/search/ai/page.tsx(359,27): error TS2339: Property 'label' does not exist on type 'false | { icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; label: string; value: string; }'.
+  Property 'label' does not exist on type 'false'.
+src/app/dashboard/data/search/ai/page.tsx(363,20): error TS18048: 'item' is possibly 'undefined'.
+src/app/dashboard/data/search/ai/page.tsx(363,25): error TS2551: Property 'value' does not exist on type 'false | { icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; label: string; value: string; }'. Did you mean 'valueOf'?
+  Property 'value' does not exist on type 'false'.
+src/app/dashboard/data/search/manual/page.tsx(463,22): error TS18048: 'item' is possibly 'undefined'.
+src/app/dashboard/data/search/manual/page.tsx(463,27): error TS2339: Property 'icon' does not exist on type 'false | "" | { icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; label: string; value: string | undefined; }'.
+  Property 'icon' does not exist on type 'false'.
+src/app/dashboard/data/search/manual/page.tsx(466,22): error TS18048: 'item' is possibly 'undefined'.
+src/app/dashboard/data/search/manual/page.tsx(466,27): error TS2339: Property 'label' does not exist on type 'false | "" | { icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; label: string; value: string | undefined; }'.
+  Property 'label' does not exist on type 'false'.
+src/app/dashboard/data/search/manual/page.tsx(470,20): error TS18048: 'item' is possibly 'undefined'.
+src/app/dashboard/data/search/manual/page.tsx(470,25): error TS2551: Property 'value' does not exist on type 'false | "" | { icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; label: string; value: string | undefined; }'. Did you mean 'valueOf'?
+  Property 'value' does not exist on type 'false'.
