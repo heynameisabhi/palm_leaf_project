@@ -93,6 +93,7 @@ export const authOptions: NextAuthOptions = {
         session.user.email = token.email as string;
         session.user.role = token.role as string;
       }
+      console.log("NextAuth session callback output:", JSON.stringify(session, null, 2));
       return session;
     },
   },
