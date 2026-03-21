@@ -42,7 +42,7 @@ HEADER_ALIASES = {
 
 def clean_key(key: str) -> str:
     """Clean and normalize a key for comparison"""
-    return key.strip().lower().replace("-", " ").replace("_", " ").replace("/", " ").replace("(", "").replace(")", "")
+    return key.strip().lower().replace("-", " ").replace("_", " ").replace("/", " ").replace("(", "").replace(")", "").replace("\"", "")
 
 def clean_language_text(text: str) -> str:
     """Clean language text by removing all types of quotes and extra whitespace"""
@@ -55,8 +55,8 @@ def clean_language_text(text: str) -> str:
     # Remove various quote characters
     quote_chars = ['"', "'", '"', '"', ''', ''', '`', '´']
     for quote in quote_chars:
-        cleaned = cleaned.replace(quote, '')
     
+        cleaned = cleaned.replace(quote, '')
     # Clean up extra whitespace
     cleaned = cleaned.strip()
     
@@ -527,6 +527,11 @@ def parse_grantha_info(grantha_text):
 def parse_subworks(subworks_text):
     """Parse subworks and clean language text for each"""
     subworks = []
+    
+    # Remove all types of standard and curly quotes before processing
+    for quote in ['"', "'", '“', '”', '‘', '’', '`', '´']:
+        subworks_text = subworks_text.replace(quote, '')
+        
     for subwork in re.split(r'\s*,\s*', subworks_text.strip()):
         if subwork:
             parsed_subwork = parse_grantha_info(subwork)
