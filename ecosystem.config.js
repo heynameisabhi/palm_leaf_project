@@ -1,6 +1,6 @@
 module.exports = {
   apps: [{
-    name: 'veda',
+    name: 'vedas',
     script: 'start.js'
   }]
 };

@@ -47,7 +47,7 @@ export default function Footer() {
                 <Leaf className="h-5 w-5 text-white" />
               </div>
               <span className="text-xl text-transparent bg-clip-text bg-gradient-to-tr from-gray-600 to-white font-bold tracking-widest">
-                VEDA
+                VEDAs
               </span>
             </Link>
             <p className="text-zinc-400 mb-4">

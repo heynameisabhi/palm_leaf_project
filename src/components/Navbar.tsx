@@ -27,7 +27,7 @@ export function Navbar() {
               {/* <Leaf className="h-5 w-5 text-white" /> */}
               <div className="absolute -inset-0.5 rounded-full bg-gradient-to-br from-green-600 to-white opacity-50 blur-sm"></div>
             </div>
-            <span className="text-xl text-transparent bg-clip-text bg-gradient-to-tr from-gray-600 to-white font-bold tracking-widest">VEDA</span>
+            <span className="text-xl text-transparent bg-clip-text bg-gradient-to-tr from-gray-600 to-white font-bold tracking-widest">VEDAS</span>
           </Link>
 
           <div className="hidden md:block">
