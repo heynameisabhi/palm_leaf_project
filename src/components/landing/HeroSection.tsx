@@ -92,9 +92,9 @@ export default function HeroSection() {
           <h1 ref={headingRef} className="text-5xl tracking-wide text-white md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
             Vedic E - {" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-green-400">
-              Documents
+              Documentation
             </span>{" "}
-            Archive
+            Archival System
           </h1>
 
           <p ref={textRef} className="text-lg md:text-xl text-zinc-300 mb-8 max-w-3xl mx-auto">
